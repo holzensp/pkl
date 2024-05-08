@@ -58,7 +58,7 @@ final class NoProxyRule {
     if (ipv4Matcher.matches()) {
       var ipAddress = ipv4Matcher.group(1);
       ipv4 = parseIpv4(ipAddress);
-      if (ipv4Matcher.groupCount() == 2) {
+      if (ipv4Matcher.groupCount() == 2 && ipv4Matcher.group(2) != null) {
         var prefixLength = Integer.parseInt(ipv4Matcher.group(2));
         if (prefixLength > 32) {
           // best-effort (don't fail on invalid cidrs).
@@ -72,7 +72,7 @@ final class NoProxyRule {
     if (ipv6Matcher.matches()) {
       var ipAddress = ipv6Matcher.group(1);
       ipv6 = parseIpv6(ipAddress);
-      if (ipv6Matcher.groupCount() == 4) {
+      if (ipv6Matcher.groupCount() == 4 && ipv6Matcher.group(4) != null) {
         var maskBuffer = ByteBuffer.allocate(16).putLong(-1L).putLong(-1L);
         var prefixLength = Integer.parseInt(ipv6Matcher.group(4));
         if (prefixLength > 128) {

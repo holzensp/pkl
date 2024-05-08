@@ -205,7 +205,7 @@ public final class Project {
     var timeout = (Duration) getNullableProperty(pSettings, "timeout");
     var moduleCacheDir = getNullablePath(pSettings, "moduleCacheDir", projectDir);
     var rootDir = getNullablePath(pSettings, "rootDir", projectDir);
-    var httpSettings = getProperty(pSettings, "http", (it) -> PklHttpSettings.parse((PObject) it));
+    var httpSettings = getNullableProperty(pSettings, "http", (it) -> PklHttpSettings.parse((PObject) it));
     return new EvaluatorSettings(
         externalProperties,
         env,
