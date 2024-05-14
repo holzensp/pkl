@@ -39,7 +39,6 @@ final class HttpClientBuilder implements HttpClient.Builder {
   private final List<Path> certificateFiles = new ArrayList<>();
   private final List<URI> certificateUris = new ArrayList<>();
   private int testPort = -1;
-  private @Nullable String proxyAuthorization = null;
   private ProxySelector proxySelector;
 
   HttpClientBuilder() {

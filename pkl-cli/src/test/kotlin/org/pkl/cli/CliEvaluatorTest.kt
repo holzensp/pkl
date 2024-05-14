@@ -45,7 +45,7 @@ import org.pkl.core.OutputFormat
 import org.pkl.core.SecurityManagers
 import org.pkl.core.util.IoUtils
 
-@WireMockTest(httpsEnabled = true)
+@WireMockTest(httpsEnabled = true, proxyMode = true)
 class CliEvaluatorTest {
   companion object {
     private val defaultContents =
@@ -1258,7 +1258,7 @@ result = someLib.x
     val options =
       CliEvaluatorOptions(
         CliBaseOptions(
-          sourceModules = listOf(URI("package://localhost:0/birds@0.5.0#/catalog/Ostritch.pkl")),
+          sourceModules = listOf(URI("package://localhost:1/birds@0.5.0#/catalog/Ostritch.pkl")),
           noCache = true,
           proxyAddress = URI(wwRuntimeInfo.httpBaseUrl),
           caCertificates = listOf(FileTestUtils.selfSignedCertificate),
