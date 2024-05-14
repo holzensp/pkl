@@ -97,7 +97,7 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
     )
   }
 
-  private val projectSettings: Project.EvaluatorSettings? by lazy {
+  private val projectSettings: PklSettings.Evaluator? by lazy {
     if (cliOptions.omitProjectSettings) null else project?.settings
   }
 

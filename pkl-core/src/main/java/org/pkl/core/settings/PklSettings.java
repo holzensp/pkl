@@ -18,6 +18,8 @@ package org.pkl.core.settings;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Pattern;
 import org.pkl.core.*;
 import org.pkl.core.module.ModuleKeyFactories;
@@ -165,6 +167,159 @@ public final class PklSettings {
     @Override
     public String toString() {
       return "Editor{" + "urlScheme='" + urlScheme + '\'' + '}';
+    }
+  }
+
+  public static class Evaluator {
+    private final @Nullable Map<String, String> externalProperties;
+    private final @Nullable Map<String, String> env;
+    private final @Nullable List<Pattern> allowedModules;
+    private final @Nullable List<Pattern> allowedResources;
+    private final @Nullable Boolean noCache;
+    private final @Nullable Path moduleCacheDir;
+    private final @Nullable List<Path> modulePath;
+    private final @Nullable Duration timeout;
+    private final @Nullable Path rootDir;
+
+    public Evaluator(
+      @Nullable Map<String, String> externalProperties,
+      @Nullable Map<String, String> env,
+      @Nullable List<Pattern> allowedModules,
+      @Nullable List<Pattern> allowedResources,
+      @Nullable Boolean noCache,
+      @Nullable Path moduleCacheDir,
+      @Nullable List<Path> modulePath,
+      @Nullable Duration timeout,
+      @Nullable Path rootDir) {
+      this.externalProperties = externalProperties;
+      this.env = env;
+      this.allowedModules = allowedModules;
+      this.allowedResources = allowedResources;
+      this.noCache = noCache;
+      this.moduleCacheDir = moduleCacheDir;
+      this.modulePath = modulePath;
+      this.timeout = timeout;
+      this.rootDir = rootDir;
+    }
+
+    public @Nullable Map<String, String> getExternalProperties() {
+      return externalProperties;
+    }
+
+    public @Nullable Map<String, String> getEnv() {
+      return env;
+    }
+
+    public @Nullable List<Pattern> getAllowedModules() {
+      return allowedModules;
+    }
+
+    public @Nullable List<Pattern> getAllowedResources() {
+      return allowedResources;
+    }
+
+    public @Nullable Boolean isNoCache() {
+      return noCache;
+    }
+
+    public @Nullable List<Path> getModulePath() {
+      return modulePath;
+    }
+
+    public @Nullable Duration getTimeout() {
+      return timeout;
+    }
+
+    public @Nullable Path getModuleCacheDir() {
+      return moduleCacheDir;
+    }
+
+    public @Nullable Path getRootDir() {
+      return rootDir;
+    }
+
+    private boolean arePatternsEqual(
+      @Nullable List<Pattern> myPattern, @Nullable List<Pattern> thatPattern) {
+      if (myPattern == null) {
+        return thatPattern == null;
+      }
+      if (thatPattern == null) {
+        return false;
+      }
+      if (myPattern.size() != thatPattern.size()) {
+        return false;
+      }
+      for (var i = 0; i < myPattern.size(); i++) {
+        if (!myPattern.get(i).pattern().equals(thatPattern.get(i).pattern())) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    private int hashPatterns(@Nullable List<Pattern> patterns) {
+      if (patterns == null) {
+        return 0;
+      }
+      var ret = 1;
+      for (var pattern : patterns) {
+        ret = 31 * ret + pattern.pattern().hashCode();
+      }
+      return ret;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
+      Evaluator that = (Evaluator) o;
+      return Objects.equals(externalProperties, that.externalProperties)
+        && Objects.equals(env, that.env)
+        && arePatternsEqual(allowedModules, that.allowedModules)
+        && arePatternsEqual(allowedResources, that.allowedResources)
+        && Objects.equals(noCache, that.noCache)
+        && Objects.equals(moduleCacheDir, that.moduleCacheDir)
+        && Objects.equals(modulePath, that.modulePath)
+        && Objects.equals(timeout, that.timeout)
+        && Objects.equals(rootDir, that.rootDir);
+    }
+
+    @Override
+    public int hashCode() {
+      var result =
+        Objects.hash(
+          externalProperties, env, noCache, moduleCacheDir, modulePath, timeout, rootDir);
+      result = 31 * result + hashPatterns(allowedModules);
+      result = 31 * result + hashPatterns(allowedResources);
+      return result;
+    }
+
+    @Override
+    public String toString() {
+      return "EvaluatorSettings{"
+        + "externalProperties="
+        + externalProperties
+        + ", env="
+        + env
+        + ", allowedModules="
+        + allowedModules
+        + ", allowedResources="
+        + allowedResources
+        + ", noCache="
+        + noCache
+        + ", moduleCacheDir="
+        + moduleCacheDir
+        + ", modulePath="
+        + modulePath
+        + ", timeout="
+        + timeout
+        + ", rootDir="
+        + rootDir
+        + '}';
     }
   }
 }

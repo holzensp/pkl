@@ -4,7 +4,7 @@ import org.pkl.commons.test.PackageServer
 import org.pkl.commons.writeString
 import org.pkl.core.*
 import org.pkl.core.packages.PackageUri
-import org.pkl.core.project.Project.EvaluatorSettings
+import org.pkl.core.settings.PklSettings
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
 import org.junit.jupiter.api.Test
@@ -40,7 +40,7 @@ class ProjectTest {
       listOf(Path.of("apiTest1.pkl"), Path.of("apiTest2.pkl")),
       listOf("PklProject", "PklProject.deps.json", ".**", "*.exe")
     )
-    val expectedSettings = EvaluatorSettings(
+    val expectedSettings = PklSettings.Evaluator(
       mapOf("two" to "2"),
       mapOf("one" to "1"),
       listOf("foo:", "bar:").map(Pattern::compile),
