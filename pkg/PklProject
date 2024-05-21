@@ -1,0 +1,9 @@
+amends "pkl:Project"
+
+package {
+  local uriBase = "127.0.0.1:8080/test/\(name)"
+  name = "project4"
+  version = "1.0.0"
+  packageZipUrl = "https://\(uriBase)@\(version).zip"
+  baseUri = "package://\(uriBase)"
+}

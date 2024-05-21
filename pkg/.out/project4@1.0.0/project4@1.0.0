@@ -1,0 +1,11 @@
+{
+  "name": "project4",
+  "packageUri": "package://127.0.0.1:8080/test/project4@1.0.0",
+  "version": "1.0.0",
+  "packageZipUrl": "https://127.0.0.1:8080/test/project4@1.0.0.zip",
+  "packageZipChecksums": {
+    "sha256": "e216a453b10334e794dad60e4c5d98b8f7c9e5d1601c954e04f949c12ae2a600"
+  },
+  "dependencies": {},
+  "authors": []
+}
