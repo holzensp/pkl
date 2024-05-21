@@ -20,12 +20,13 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.regex.Pattern;
 import org.pkl.core.*;
-import org.pkl.core.httpsettings.PklHttpSettings;
+import org.pkl.core.httpsettings.PklEvaluatorSettings;
 import org.pkl.core.module.ModuleKeyFactories;
 import org.pkl.core.resource.ResourceReaders;
 import org.pkl.core.runtime.VmEvalException;
 import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.util.IoUtils;
+import org.pkl.core.util.Nullable;
 
 /**
  * Java representation of a Pkl settings file. A Pkl settings file is a Pkl module amending the
@@ -33,7 +34,7 @@ import org.pkl.core.util.IoUtils;
  * {@code load} methods.
  */
 // keep in sync with stdlib/settings.pkl
-public record PklSettings(Editor editor, PklHttpSettings httpSettings) {
+public record PklSettings(Editor editor, @Nullable PklEvaluatorSettings.Proxy proxySettings) {
   private static final List<Pattern> ALLOWED_MODULES =
       List.of(Pattern.compile("pkl:"), Pattern.compile("file:"));
 
@@ -53,7 +54,7 @@ public record PklSettings(Editor editor, PklHttpSettings httpSettings) {
     var path = pklHomeDir.resolve("settings.pkl");
     return Files.exists(path)
         ? load(ModuleSource.path(path))
-        : new PklSettings(Editor.SYSTEM, PklHttpSettings.DEFAULT);
+        : new PklSettings(Editor.SYSTEM, null);
   }
 
   /** Loads a settings file from the given path. */
@@ -85,10 +86,11 @@ public record PklSettings(Editor editor, PklHttpSettings httpSettings) {
 
   private static PklSettings parseSettings(PModule module, ModuleSource location)
       throws VmEvalException {
-    var httpSettings = module.getPropertyOrNull("http");
-    if (httpSettings instanceof PObject http) {
-      return new PklSettings(parseEditor(module, location), PklHttpSettings.parse(http));
+    var proxySettings = module.getPropertyOrNull("proxy");
+    if (proxySettings instanceof PObject proxy) {
+      return new PklSettings(parseEditor(module, location), PklEvaluatorSettings.Proxy.parse(proxy));
     }
+    // TODO: Improve error experience; this is surfaced as a BUG.
     throw new VmExceptionBuilder().evalError("invalidSettingsFile", location.getUri()).build();
   }
 

@@ -9,7 +9,7 @@ import org.pkl.commons.writeString
 import org.pkl.core.Evaluator
 import org.pkl.core.ModuleSource
 import org.pkl.core.PObject
-import org.pkl.core.httpsettings.PklHttpSettings
+import org.pkl.core.httpsettings.PklEvaluatorSettings
 import org.pkl.core.settings.PklSettings.Editor
 
 class PklSettingsTest {
@@ -25,7 +25,7 @@ class PklSettingsTest {
     )
 
     val settings = PklSettings.loadFromPklHomeDir(tempDir)
-    assertThat(settings).isEqualTo(PklSettings(Editor.SUBLIME, PklHttpSettings.DEFAULT))
+    assertThat(settings).isEqualTo(PklSettings(Editor.SUBLIME, PklEvaluatorSettings.DEFAULT))
   }
 
   @Test
@@ -39,7 +39,7 @@ class PklSettingsTest {
     )
 
     val settings = PklSettings.load(ModuleSource.path(settingsPath))
-    assertThat(settings).isEqualTo(PklSettings(Editor.IDEA, PklHttpSettings.DEFAULT))
+    assertThat(settings).isEqualTo(PklSettings(Editor.IDEA, PklEvaluatorSettings.DEFAULT))
   }
 
   @Test
