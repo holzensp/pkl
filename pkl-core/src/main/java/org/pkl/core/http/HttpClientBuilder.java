@@ -29,7 +29,6 @@ import org.pkl.core.Release;
 import org.pkl.core.http.HttpClient.Builder;
 import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.IoUtils;
-import org.pkl.core.util.Nullable;
 
 final class HttpClientBuilder implements HttpClient.Builder {
   private String userAgent;

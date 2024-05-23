@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.pkl.commons.test.FileTestUtils
 import org.pkl.core.http.HttpClient
-import org.pkl.core.httpsettings.PklEvaluatorSettings
+import org.pkl.core.evaluatorSettings.PklEvaluatorSettings
 import java.net.URI
 import java.nio.file.Path
 import java.util.regex.Pattern

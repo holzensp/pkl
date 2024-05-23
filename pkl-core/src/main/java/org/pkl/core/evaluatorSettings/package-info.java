@@ -1,4 +1,4 @@
 @NonnullByDefault
-package org.pkl.core.httpsettings;
+package org.pkl.core.evaluatorSettings;
 
 import org.pkl.core.util.NonnullByDefault;

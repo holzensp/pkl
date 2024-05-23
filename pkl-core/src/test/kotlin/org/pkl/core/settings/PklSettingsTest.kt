@@ -9,7 +9,7 @@ import org.pkl.commons.writeString
 import org.pkl.core.Evaluator
 import org.pkl.core.ModuleSource
 import org.pkl.core.PObject
-import org.pkl.core.httpsettings.PklEvaluatorSettings
+import org.pkl.core.evaluatorSettings.PklEvaluatorSettings
 import org.pkl.core.settings.PklSettings.Editor
 
 class PklSettingsTest {

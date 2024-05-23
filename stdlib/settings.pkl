@@ -27,7 +27,7 @@ import "pkl:EvaluatorSettings"
 /// The editor for viewing and editing Pkl files.
 editor: Editor = System
 
-proxy: EvaluatorSettings.Proxy?
+http: EvaluatorSettings.Http?
 
 /// The editor associated with `file:` URLs ending in `.pkl`.
 hidden const System: Editor = new {

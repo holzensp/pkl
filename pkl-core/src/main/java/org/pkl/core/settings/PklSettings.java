@@ -20,7 +20,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.regex.Pattern;
 import org.pkl.core.*;
-import org.pkl.core.httpsettings.PklEvaluatorSettings;
+import org.pkl.core.evaluatorSettings.PklEvaluatorSettings;
 import org.pkl.core.module.ModuleKeyFactories;
 import org.pkl.core.resource.ResourceReaders;
 import org.pkl.core.runtime.VmEvalException;
@@ -34,7 +34,7 @@ import org.pkl.core.util.Nullable;
  * {@code load} methods.
  */
 // keep in sync with stdlib/settings.pkl
-public record PklSettings(Editor editor, @Nullable PklEvaluatorSettings.Proxy proxySettings) {
+public record PklSettings(Editor editor, @Nullable PklEvaluatorSettings.Http getHttp) {
   private static final List<Pattern> ALLOWED_MODULES =
       List.of(Pattern.compile("pkl:"), Pattern.compile("file:"));
 
@@ -86,12 +86,8 @@ public record PklSettings(Editor editor, @Nullable PklEvaluatorSettings.Proxy pr
 
   private static PklSettings parseSettings(PModule module, ModuleSource location)
       throws VmEvalException {
-    var proxySettings = module.getPropertyOrNull("proxy");
-    if (proxySettings instanceof PObject proxy) {
-      return new PklSettings(parseEditor(module, location), PklEvaluatorSettings.Proxy.parse(proxy));
-    }
-    // TODO: Improve error experience; this is surfaced as a BUG.
-    throw new VmExceptionBuilder().evalError("invalidSettingsFile", location.getUri()).build();
+    var httpSettings = PklEvaluatorSettings.Http.parse((Value) module.getProperty("http"));
+    return new PklSettings(parseEditor(module, location), httpSettings);
   }
 
   /**

@@ -93,8 +93,11 @@ moduleCacheDir: String?
 /// Relative paths are resolved against PklProject's enclosing directory.
 rootDir: String?
 
-/// Configuration of the HTTP proxy to use, `null` for none.
-proxy: Proxy?
+/// Settings that control how Pkl talks to HTTP(S) servers.
+class Http {
+  /// Configuration of the HTTP proxy to use, `null` for none.
+  proxy: Proxy?
+}
 
 /// Settings that control how Pkl talks to HTTP proxies.
 class Proxy {

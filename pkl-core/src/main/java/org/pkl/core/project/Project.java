@@ -38,7 +38,7 @@ import org.pkl.core.SecurityManagers;
 import org.pkl.core.StackFrameTransformer;
 import org.pkl.core.StackFrameTransformers;
 import org.pkl.core.Version;
-import org.pkl.core.httpsettings.PklEvaluatorSettings;
+import org.pkl.core.evaluatorSettings.PklEvaluatorSettings;
 import org.pkl.core.module.ModuleKeyFactories;
 import org.pkl.core.packages.Checksums;
 import org.pkl.core.packages.Dependency.RemoteDependency;
@@ -205,7 +205,8 @@ public final class Project {
     var timeout = (Duration) getNullableProperty(pSettings, "timeout");
     var moduleCacheDir = getNullablePath(pSettings, "moduleCacheDir", projectDir);
     var rootDir = getNullablePath(pSettings, "rootDir", projectDir);
-    var httpSettings = getNullableProperty(pSettings, "http", (it) -> PklEvaluatorSettings.parse((PObject) it));
+    var httpSettings =
+        getNullableProperty(pSettings, "http", (it) -> PklEvaluatorSettings.parse((PObject) it));
     return new EvaluatorSettings(
         externalProperties,
         env,
