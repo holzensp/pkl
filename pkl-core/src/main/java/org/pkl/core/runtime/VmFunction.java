@@ -106,6 +106,11 @@ public final class VmFunction extends VmObjectLike {
   }
 
   @Override
+  public Object toReferenceKey(Object declarationKey) {
+    return declarationKey;
+  }
+
+  @Override
   public @Nullable Object getCachedValue(Object key) {
     return null;
   }

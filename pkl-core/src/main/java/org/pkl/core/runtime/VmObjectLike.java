@@ -82,6 +82,31 @@ public abstract class VmObjectLike extends VmValue {
   public abstract UnmodifiableEconomicMap<Object, ObjectMember> getMembers();
 
   /**
+   * The <em>reference</em> key in an object {@code obj} is the key used in subscripting; {@code
+   * obj[k]}. The <em>declaration</em> key is that used in the declaration of {@code obj}, relative
+   * to its {@code parent} object. The two diverge when this object's declaration {@code delete}s
+   * any elements.
+   *
+   * <p>For example
+   *
+   * <pre><code>
+   *   obj = new Dynamic { "foo" "bar" "baz" } { [1] = delete }
+   * </code></pre>
+   *
+   * The declaration keys of {@code obj} translate to its reference keys as follows:
+   *
+   * <pre><code>
+   *   0 -> 0
+   *   1 -> null
+   *   2 -> 1
+   * </code></pre>
+   *
+   * @param declarationKey The key as used in the <em>declaration</em> of this object.
+   * @return The key as used when subscripting this object.
+   */
+  public abstract @Nullable Object toReferenceKey(Object declarationKey);
+
+  /**
    * Reads from the properties cache for this object. The cache contains the values of all members
    * defined in this object or an ancestor thereof which have been requested with this object as the
    * receiver.

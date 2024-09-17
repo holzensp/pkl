@@ -19,6 +19,7 @@ import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import java.util.*;
+import java.util.function.Function;
 import org.graalvm.collections.EconomicMap;
 import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.pkl.core.ast.member.ObjectMember;
@@ -28,6 +29,9 @@ import org.pkl.core.util.Nullable;
 
 /** Corresponds to `pkl.base#Object`. */
 public abstract class VmObject extends VmObjectLike {
+  private static final Object deletedElementIndicesKey = new Object();
+  private static final Object deletedEntriesAndPropertiesKey = new Object();
+
   @CompilationFinal protected @Nullable VmObject parent;
   protected final UnmodifiableEconomicMap<Object, ObjectMember> members;
   protected final EconomicMap<Object, Object> cachedValues;
@@ -43,9 +47,7 @@ public abstract class VmObject extends VmObjectLike {
     super(enclosingFrame);
     this.parent = parent;
     this.members = members;
-    this.cachedValues = cachedValues;
-
-    assert parent != this;
+    this.cachedValues = extractDeletions(members, cachedValues);
   }
 
   public VmObject(
@@ -53,6 +55,88 @@ public abstract class VmObject extends VmObjectLike {
       @Nullable VmObject parent,
       UnmodifiableEconomicMap<Object, ObjectMember> members) {
     this(enclosingFrame, parent, members, EconomicMaps.create());
+  }
+
+  private static EconomicMap<Object, Object> extractDeletions(
+      UnmodifiableEconomicMap<Object, ObjectMember> members,
+      EconomicMap<Object, Object> cachedValues) {
+
+    var elementDeletions = new TreeSet<Long>();
+    var otherDeletions = new HashSet<>();
+    for (var memberKey : members.getKeys()) {
+      if (!members.get(memberKey).isDelete()) {
+        continue;
+      }
+      if (memberKey instanceof Long key) {
+        // TODO: Check whether member is an element
+        elementDeletions.add(key);
+      } else {
+        otherDeletions.add(memberKey);
+      }
+    }
+    if (!elementDeletions.isEmpty()) {
+      EconomicMaps.put(cachedValues, deletedElementIndicesKey, elementDeletions);
+    }
+    if (!otherDeletions.isEmpty()) {
+      EconomicMaps.put(cachedValues, deletedEntriesAndPropertiesKey, otherDeletions);
+    }
+    return cachedValues;
+  }
+
+  private @Nullable SortedSet<Long> getDeletedElementIndices() {
+    if (!(cachedValues.get(deletedElementIndicesKey) instanceof SortedSet<?> set)) {
+      return null;
+    }
+    //noinspection unchecked
+    return (SortedSet<Long>) set;
+  }
+
+  private @Nullable Set<Object> getDeletedEntriesAndProperties() {
+    if (!(cachedValues.get(deletedEntriesAndPropertiesKey) instanceof Set<?> set)) {
+      return null;
+    }
+    //noinspection unchecked
+    return (Set<Object>) set;
+  }
+
+  public Object toDeclarationKey(Object referenceKey) {
+    if (!(referenceKey instanceof Long index) || index <= 0L) {
+      return referenceKey;
+    }
+    var deletedElementIndices = getDeletedElementIndices();
+    if (deletedElementIndices == null) {
+      return referenceKey;
+    }
+    return index + deletedElementIndices.subSet(0L, index + 1L).size();
+  }
+
+  @Override
+  public @Nullable Object toReferenceKey(Object declarationKey) {
+    var member = members.get(declarationKey);
+    if (member == null) {
+      return declarationKey;
+    }
+    if (member.isDelete()) {
+      return null;
+    }
+    // TODO: Beyond `index` not being `Long`; check whether the member is an element.
+    if (!(declarationKey instanceof Long index)) {
+      return declarationKey;
+    }
+
+    var deletedElementIndices = getDeletedElementIndices();
+    if (deletedElementIndices == null) {
+      return declarationKey;
+    }
+
+    return toReferenceElementKey(index, deletedElementIndices);
+  }
+
+  private @Nullable Long toReferenceElementKey(long declarationKey, SortedSet<Long> deletions) {
+    if (deletions.contains(declarationKey)) {
+      return null;
+    }
+    return declarationKey - deletions.subSet(0L, declarationKey).size();
   }
 
   public final void lateInitParent(VmObject parent) {
@@ -137,16 +221,46 @@ public abstract class VmObject extends VmObjectLike {
   @Override
   @TruffleBoundary
   public final boolean iterateMembers(MemberConsumer consumer) {
+    var deletions = getDeletedEntriesAndProperties();
+    return iterateMembers(
+        consumer, deletions == null ? Collections.EMPTY_SET : deletions, (key) -> key);
+  }
+
+  @TruffleBoundary
+  private boolean iterateMembers(
+      MemberConsumer consumer, Set<Object> deleted, Function<Long, Long> converter) {
     var parent = getParent();
-    if (parent != null) {
-      var completed = parent.iterateMembers(consumer);
-      if (!completed) return false;
+    var deletedElementIndices = getDeletedElementIndices();
+    Function<Long, Long> newConverter =
+        deletedElementIndices == null
+            ? converter
+            : (index) -> {
+              var newIndex = toReferenceElementKey(index, deletedElementIndices);
+              return newIndex == null ? null : converter.apply(newIndex);
+            };
+    var newDeleted = deleted;
+    var deletedEntriesAndProperties = getDeletedEntriesAndProperties();
+    if (deletedEntriesAndProperties != null) {
+      newDeleted = new HashSet<>(deleted);
+      newDeleted.addAll(deletedEntriesAndProperties);
+    }
+    if (parent != null && !parent.iterateMembers(consumer, newDeleted, newConverter)) {
+      return false;
     }
     var entries = members.getEntries();
     while (entries.advance()) {
       var member = entries.getValue();
       if (member.isLocal()) continue;
-      if (!consumer.accept(entries.getKey(), entries.getKey(), member)) return false;
+      var declarationKey = entries.getKey();
+      var referenceKey = declarationKey;
+      if (deleted.contains(declarationKey)) {
+        referenceKey = null;
+      } else if (referenceKey instanceof Long index) {
+        referenceKey = converter.apply(index);
+      }
+      if (!consumer.accept(declarationKey, referenceKey, member)) {
+        return false;
+      }
     }
     return true;
   }
@@ -168,11 +282,19 @@ public abstract class VmObject extends VmObjectLike {
           var member = cursor.getValue();
           // isAbstract() can occur when VmAbstractObject.toString() is called
           // on a prototype of an abstract class (e.g., in the Java debugger)
-          if (member.isLocalOrExternalOrAbstract() || clazz.isHiddenProperty(memberKey)) {
+          if (member.isLocalOrExternalOrAbstractOrDelete() || clazz.isHiddenProperty(memberKey)) {
             continue;
           }
 
           var memberValue = getCachedValue(memberKey);
+          if (memberValue == VmUtils.DELETE_MARKER) {
+            continue;
+          }
+          if (member.isDelete()) {
+            setCachedValue(memberKey, VmUtils.DELETE_MARKER);
+            continue;
+          }
+
           if (memberValue == null) {
             try {
               memberValue = VmUtils.doReadMember(this, owner, memberKey, member);

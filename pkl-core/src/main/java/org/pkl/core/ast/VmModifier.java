@@ -148,12 +148,8 @@ public final class VmModifier {
     return (modifiers & (LOCAL | EXTERNAL | HIDDEN)) != 0;
   }
 
-  public static boolean isLocalOrExternalOrHiddenOrDelete(int modifiers) {
-    return (modifiers & (LOCAL | EXTERNAL | HIDDEN | DELETE)) != 0;
-  }
-
-  public static boolean isLocalOrExternalOrAbstract(int modifiers) {
-    return (modifiers & (LOCAL | EXTERNAL | ABSTRACT)) != 0;
+  public static boolean isLocalOrExternalOrAbstractOrDelete(int modifiers) {
+    return (modifiers & (LOCAL | EXTERNAL | ABSTRACT | DELETE)) != 0;
   }
 
   public static boolean isConstOrFixed(int modifiers) {
