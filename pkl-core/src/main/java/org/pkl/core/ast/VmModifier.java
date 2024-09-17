@@ -55,6 +55,8 @@ public final class VmModifier {
 
   public static final int GLOB = 0x1000;
 
+  public static final int DELETE = 0x2000;
+
   // modifier sets
 
   public static final int NONE = 0;
@@ -134,12 +136,20 @@ public final class VmModifier {
     return (modifiers & ENTRY) != 0;
   }
 
+  public static boolean isDelete(int modifiers) {
+    return (modifiers & DELETE) != 0;
+  }
+
   public static boolean isType(int modifiers) {
-    return (modifiers & (CLASS | TYPE_ALIAS | IMPORT)) != 0 && (modifiers & GLOB) == 0;
+    return (modifiers & (CLASS | TYPE_ALIAS | IMPORT)) != 0 && (modifiers & (GLOB | DELETE)) == 0;
   }
 
   public static boolean isLocalOrExternalOrHidden(int modifiers) {
     return (modifiers & (LOCAL | EXTERNAL | HIDDEN)) != 0;
+  }
+
+  public static boolean isLocalOrExternalOrHiddenOrDelete(int modifiers) {
+    return (modifiers & (LOCAL | EXTERNAL | HIDDEN | DELETE)) != 0;
   }
 
   public static boolean isLocalOrExternalOrAbstract(int modifiers) {
