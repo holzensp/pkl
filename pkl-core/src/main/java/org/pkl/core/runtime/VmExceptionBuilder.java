@@ -389,8 +389,8 @@ public final class VmExceptionBuilder {
   private List<Identifier> collectPropertyNames(VmObjectLike object, boolean isRead) {
     var result = new HashSet<Identifier>();
     object.iterateMembers(
-        (key, member) -> {
-          if (member.isProp() && (isRead || !member.isExternal())) {
+        (declarationKey, referenceKey, member) -> {
+          if (referenceKey != null && member.isProp() && (isRead || !member.isExternal())) {
             result.add(member.getName());
           }
           return true;

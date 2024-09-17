@@ -19,7 +19,6 @@ import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import java.util.*;
-import java.util.function.BiFunction;
 import org.graalvm.collections.EconomicMap;
 import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.pkl.core.ast.member.ObjectMember;
@@ -101,12 +100,13 @@ public abstract class VmObject extends VmObjectLike {
   public final boolean iterateMemberValues(MemberValueConsumer consumer) {
     var visited = new HashSet<>();
     return iterateMembers(
-        (key, member) -> {
-          var alreadyVisited = !visited.add(key);
+        (declarationKey, referenceKey, member) -> {
+          if (referenceKey == null) return true;
+          var alreadyVisited = !visited.add(referenceKey);
           // important to record hidden member as visited before skipping it
           // because any overriding member won't carry a `hidden` identifier
           if (alreadyVisited || member.isLocalOrExternalOrHidden()) return true;
-          return consumer.accept(key, member, getCachedValue(key));
+          return consumer.accept(referenceKey, member, getCachedValue(referenceKey));
         });
   }
 
@@ -122,20 +122,21 @@ public abstract class VmObject extends VmObjectLike {
   public final boolean iterateAlreadyForcedMemberValues(ForcedMemberValueConsumer consumer) {
     var visited = new HashSet<>();
     return iterateMembers(
-        (key, member) -> {
-          var alreadyVisited = !visited.add(key);
+        (declarationKey, referenceKey, member) -> {
+          if (referenceKey == null) return true;
+          var alreadyVisited = !visited.add(referenceKey);
           // important to record hidden member as visited before skipping it
           // because any overriding member won't carry a `hidden` identifier
           if (alreadyVisited || member.isLocalOrExternalOrHidden()) return true;
-          Object cachedValue = getCachedValue(key);
+          Object cachedValue = getCachedValue(referenceKey);
           assert cachedValue != null; // forced
-          return consumer.accept(key, member, cachedValue);
+          return consumer.accept(referenceKey, member, cachedValue);
         });
   }
 
   @Override
   @TruffleBoundary
-  public final boolean iterateMembers(BiFunction<Object, ObjectMember, Boolean> consumer) {
+  public final boolean iterateMembers(MemberConsumer consumer) {
     var parent = getParent();
     if (parent != null) {
       var completed = parent.iterateMembers(consumer);
@@ -145,7 +146,7 @@ public abstract class VmObject extends VmObjectLike {
     while (entries.advance()) {
       var member = entries.getValue();
       if (member.isLocal()) continue;
-      if (!consumer.apply(entries.getKey(), member)) return false;
+      if (!consumer.accept(entries.getKey(), entries.getKey(), member)) return false;
     }
     return true;
   }

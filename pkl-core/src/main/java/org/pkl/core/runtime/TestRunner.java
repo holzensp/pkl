@@ -82,7 +82,7 @@ public final class TestRunner {
           var listing = (VmListing) groupValue;
           var result = results.newResult(String.valueOf(groupKey));
           return listing.iterateMembers(
-              (idx, member) -> {
+              (idx, eek, member) -> {
                 if (member.isLocalOrExternalOrHidden()) {
                   return true;
                 }
@@ -242,17 +242,18 @@ public final class TestRunner {
         });
 
     expectedExampleOutputs.iterateMembers(
-        (groupKey, groupMember) -> {
-          if (groupMember.isLocalOrExternalOrHidden()) {
+        (groupDeclarationKey, groupReferenceKey, groupMember) -> {
+          if (groupReferenceKey == null || groupMember.isLocalOrExternalOrHidden()) {
             return true;
           }
-          if (examples.getCachedValue(groupKey) == null) {
+          if (examples.getCachedValue(groupDeclarationKey) == null) {
+            var key = String.valueOf(groupReferenceKey);
             allGroupsSucceeded.set(false);
             results
-                .newResult(String.valueOf(groupKey))
+                .newResult(key)
                 .addFailure(
                     Failure.buildExamplePropertyMismatchFailure(
-                        getDisplayUri(groupMember), String.valueOf(groupKey), false));
+                        getDisplayUri(groupMember), key, false));
           }
           return true;
         });

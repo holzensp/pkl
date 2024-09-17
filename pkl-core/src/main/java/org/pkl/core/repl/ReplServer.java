@@ -374,9 +374,9 @@ public class ReplServer implements AutoCloseable {
 
   private void collectMembers(Set<String> members, VmObjectLike composite) {
     composite.iterateMembers(
-        (key, prop) -> {
-          if (key instanceof Identifier) {
-            members.add(key.toString());
+        (declarationKey, referenceKey, prop) -> {
+          if (referenceKey instanceof Identifier) {
+            members.add(referenceKey.toString());
           }
           return true;
         });
