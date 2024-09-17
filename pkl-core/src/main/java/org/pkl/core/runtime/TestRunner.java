@@ -177,7 +177,7 @@ public final class TestRunner {
 
           var groupSucceeded = new MutableBoolean(true);
           group.iterateMembers(
-              ((exampleIndex, exampleMember) -> {
+              ((exampleIndex, exampleReferenceIndex, exampleMember) -> {
                 if (exampleMember.isLocalOrExternalOrHidden()) {
                   return true;
                 }
@@ -270,7 +270,7 @@ public final class TestRunner {
               var listing = (VmListing) groupValue;
               var success =
                   listing.iterateMembers(
-                      (idx, member) -> {
+                      (idx, referenceIdx, member) -> {
                         if (member.isLocalOrExternalOrHidden()) {
                           return true;
                         }

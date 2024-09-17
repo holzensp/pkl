@@ -54,7 +54,7 @@ public final class MappingNodes {
       var count = new MutableLong(0);
       var visited = new HashSet<>();
       self.iterateMembers(
-          (key, member) -> {
+          (key, referenceKey, member) -> {
             var alreadyVisited = !visited.add(key);
             // important to record hidden member as visited before skipping it
             // because any overriding member won't carry a `hidden` identifier
