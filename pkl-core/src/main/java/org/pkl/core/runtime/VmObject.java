@@ -171,7 +171,7 @@ public abstract class VmObject extends VmObjectLike {
 
   @Override
   public void setCachedValue(Object key, Object value, ObjectMember objectMember) {
-    EconomicMaps.put(cachedValues, key, value);
+    EconomicMaps.put(cachedValues, toReferenceKey(key), value);
   }
 
   @Override
@@ -288,10 +288,6 @@ public abstract class VmObject extends VmObjectLike {
 
           var memberValue = getCachedValue(memberKey);
           if (memberValue == VmUtils.DELETE_MARKER) {
-            continue;
-          }
-          if (member.isDelete()) {
-            setCachedValue(memberKey, VmUtils.DELETE_MARKER);
             continue;
           }
 
