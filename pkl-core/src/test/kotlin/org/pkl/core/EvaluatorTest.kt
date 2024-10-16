@@ -87,6 +87,26 @@ class EvaluatorTest {
   }
 
   @Test
+  fun `delete index`() {
+    val result =
+      evaluator.evaluateOutputText(
+        text(
+          """
+        foo { 1; 2; 3 }
+
+        bar = (foo) {
+          [0] = delete
+          this[0]
+        }
+        
+      """
+            .trimIndent()
+        )
+      )
+    assertThat(result).contains("eek")
+  }
+
+  @Test
   fun `evaluate text with relative import`() {
     val e = assertThrows<PklException> { evaluator.evaluate(text("import \"foo.bar\"")) }
     assertThat(e).hasMessageContaining("Module `repl:text` cannot have a relative import URI.")

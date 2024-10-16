@@ -47,7 +47,11 @@ public abstract class VmObject extends VmObjectLike {
     this.parent = parent;
     this.members = members;
     this.cachedValues =
-        extractDeletions(parent != null && parent.hasElements(), members, cachedValues);
+        extractDeletions(
+            parent instanceof VmTyped,
+            parent != null && parent.hasElements(),
+            members,
+            cachedValues);
 
     assert parent != this;
   }
@@ -213,7 +217,9 @@ public abstract class VmObject extends VmObjectLike {
         var referenceKey = toReferenceKey(definitionKey, deletedKeys, deletedIndices);
 
         var member = entries.getValue();
-        if (member.isLocal() || referenceKey == null) continue;
+        if (member.isLocal() || referenceKey == null) {
+          continue;
+        }
 
         if (!consumer.accept(referenceKey, member)) return false;
       }
@@ -341,6 +347,7 @@ public abstract class VmObject extends VmObjectLike {
   }
 
   private static EconomicMap<Object, Object> extractDeletions(
+      boolean isTyped,
       boolean hasElements,
       UnmodifiableEconomicMap<Object, ObjectMember> members,
       EconomicMap<Object, Object> cachedValues) {
@@ -354,8 +361,15 @@ public abstract class VmObject extends VmObjectLike {
       hasElements = member.isElement();
     }
     for (var memberKey : members.getKeys()) {
-      if (!members.get(memberKey).isDelete()) {
+      var member = members.get(memberKey);
+      if (!member.isDelete()) {
         continue;
+      }
+      if (isTyped) {
+        throw new VmExceptionBuilder()
+            .evalError("cannotDeleteFromTyped")
+            .withSourceSection(member.getSourceSection())
+            .build();
       }
       if (memberKey instanceof Long key && hasElements) {
         elementDeletions.add(key);
