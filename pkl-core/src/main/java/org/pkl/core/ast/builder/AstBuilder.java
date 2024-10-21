@@ -1065,6 +1065,8 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
     checkClosingDelimiter(ctx.err, "}", ctx.stop);
     return symbolTable.enterObjectScope(
         (scope) -> {
+          checkSpaceSeparatedObjectMembers(ctx);
+
           var objectMemberCtx = ctx.objectMember();
           if (objectMemberCtx.isEmpty()) {
             return EmptyObjectLiteralNodeGen.create(
@@ -1081,14 +1083,23 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
           var values = new ArrayList<ObjectMember>();
           var isConstantKeyNodes = true;
 
-          checkSpaceSeparatedObjectMembers(ctx);
+          var deletions = new ArrayList<ObjectMember>();
+
           for (var memberCtx : objectMemberCtx) {
             if (memberCtx instanceof ObjectPropertyContext propertyCtx) {
+              if (propertyCtx.d != null) {
+                addDeletion(deletions, propertyCtx);
+                continue;
+              }
               addProperty(members, doVisitObjectProperty(propertyCtx));
               continue;
             }
 
             if (memberCtx instanceof ObjectEntryContext entryCtx) {
+              if (entryCtx.d != null) {
+                addDeletion(deletions, entryCtx);
+                continue;
+              }
               var keyAndValue = doVisitObjectEntry(entryCtx);
               var key = keyAndValue.first;
               keyNodes.add(key);
@@ -1133,6 +1144,7 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
                   parameterTypes,
                   members,
                   elements.toArray(new ObjectMember[0]),
+                  new ObjectMember[] {}, // TODO:DELETION
                   parentNode);
             }
             //noinspection ConstantConditions
@@ -2683,6 +2695,10 @@ public final class AstBuilder extends AbstractAstBuilder<Object> {
           .withSourceSection(property.getHeaderSection())
           .build();
     }
+  }
+  
+  private void addDeletion(ArrayList<ObjectMember> deletions, ObjectMemberContext ctx) {
+    
   }
 
   private void invalidSeparatorPosition(SourceSection source) {

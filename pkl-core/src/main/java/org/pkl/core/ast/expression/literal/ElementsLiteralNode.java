@@ -44,7 +44,8 @@ public abstract class ElementsLiteralNode extends SpecializedObjectLiteralNode {
       @Nullable FrameDescriptor parametersDescriptor,
       UnresolvedTypeNode[] parameterTypes,
       UnmodifiableEconomicMap<Object, ObjectMember> properties,
-      ObjectMember[] elements) {
+      ObjectMember[] elements,
+      ObjectMember[] deletions) {
 
     super(
         sourceSection,
@@ -71,6 +72,7 @@ public abstract class ElementsLiteralNode extends SpecializedObjectLiteralNode {
         new UnresolvedTypeNode[0], // ditto
         members,
         elements,
+        new ObjectMember[] {}, // TODO:DELETION
         newParentNode);
   }
 
