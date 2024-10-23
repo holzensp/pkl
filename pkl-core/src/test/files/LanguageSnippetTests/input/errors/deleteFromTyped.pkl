@@ -1,0 +1,7 @@
+class Foo {
+  bar: String
+}
+
+foo: Foo = new {
+  bar = delete
+}

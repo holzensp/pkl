@@ -1,0 +1,10 @@
+–– Pkl Error ––
+Cannot delete properties from a `Typed` object.
+
+x | bar = delete
+    ^^^^^^^^^^^^
+at deleteFromTyped#foo (file:///$snippetsDir/input/errors/deleteFromTyped.pkl)
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
