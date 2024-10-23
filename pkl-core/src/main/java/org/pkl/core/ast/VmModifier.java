@@ -55,6 +55,8 @@ public final class VmModifier {
 
   public static final int GLOB = 0x1000;
 
+  public static final int DELETE = 0x2000;
+
   // To be removed when https://github.com/apple/pkl/issues/741 is fixed
   public static final int IS_IN_ITERABLE = 0x100000;
 
@@ -137,6 +139,10 @@ public final class VmModifier {
     return (modifiers & ENTRY) != 0;
   }
 
+  public static boolean isDelete(int modifiers) {
+    return (modifiers & DELETE) != 0;
+  }
+
   public static boolean isInIterable(int modifiers) {
     return (modifiers & IS_IN_ITERABLE) != 0;
   }
@@ -149,8 +155,8 @@ public final class VmModifier {
     return (modifiers & (LOCAL | EXTERNAL | HIDDEN)) != 0;
   }
 
-  public static boolean isLocalOrExternalOrAbstract(int modifiers) {
-    return (modifiers & (LOCAL | EXTERNAL | ABSTRACT)) != 0;
+  public static boolean isLocalOrExternalOrAbstractOrDelete(int modifiers) {
+    return (modifiers & (LOCAL | EXTERNAL | ABSTRACT | DELETE)) != 0;
   }
 
   public static boolean isConstOrFixed(int modifiers) {

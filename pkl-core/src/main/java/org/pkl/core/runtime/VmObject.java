@@ -167,7 +167,7 @@ public abstract class VmObject extends VmObjectLike {
           var member = cursor.getValue();
           // isAbstract() can occur when VmAbstractObject.toString() is called
           // on a prototype of an abstract class (e.g., in the Java debugger)
-          if (member.isLocalOrExternalOrAbstract() || clazz.isHiddenProperty(memberKey)) {
+          if (member.isLocalOrExternalOrAbstractOrDelete() || clazz.isHiddenProperty(memberKey)) {
             continue;
           }
 
