@@ -40,6 +40,16 @@ public final class VmTyped extends VmObject {
       UnmodifiableEconomicMap<Object, ObjectMember> members) {
     super(enclosingFrame, parent, members);
     this.clazz = clazz;
+    var cursor = members.getEntries();
+    while (cursor.advance()) {
+      var member = cursor.getValue();
+      if (member.isDelete()) {
+        throw new VmExceptionBuilder()
+          .evalError("cannotDeleteFromTyped")
+          .withSourceSection(member.getSourceSection())
+          .build();
+      }
+    }
   }
 
   public void lateInitVmClass(VmClass clazz) {
