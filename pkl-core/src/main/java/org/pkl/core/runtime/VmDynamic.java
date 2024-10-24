@@ -48,7 +48,7 @@ public final class VmDynamic extends VmObject {
       VmObject parent,
       UnmodifiableEconomicMap<Object, ObjectMember> members,
       int length) {
-    super(enclosingFrame, Objects.requireNonNull(parent), members);
+    super(enclosingFrame, Objects.requireNonNull(parent), members, EconomicMaps.create());
     this.length = length;
   }
 

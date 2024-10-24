@@ -49,13 +49,6 @@ public abstract class VmObject extends VmObjectLike {
     assert parent != this;
   }
 
-  public VmObject(
-      MaterializedFrame enclosingFrame,
-      @Nullable VmObject parent,
-      UnmodifiableEconomicMap<Object, ObjectMember> members) {
-    this(enclosingFrame, parent, members, EconomicMaps.create());
-  }
-
   public final void lateInitParent(VmObject parent) {
     assert this.parent == null;
     this.parent = parent;

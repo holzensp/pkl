@@ -38,16 +38,16 @@ public final class VmTyped extends VmObject {
       // null -> will be initialized using lateInitVmClass() later
       @Nullable VmClass clazz,
       UnmodifiableEconomicMap<Object, ObjectMember> members) {
-    super(enclosingFrame, parent, members);
+    super(enclosingFrame, parent, members, EconomicMaps.create());
     this.clazz = clazz;
     var cursor = members.getEntries();
     while (cursor.advance()) {
       var member = cursor.getValue();
       if (member.isDelete()) {
         throw new VmExceptionBuilder()
-          .evalError("cannotDeleteFromTyped")
-          .withSourceSection(member.getSourceSection())
-          .build();
+            .evalError("cannotDeleteFromTyped")
+            .withSourceSection(member.getSourceSection())
+            .build();
       }
     }
   }

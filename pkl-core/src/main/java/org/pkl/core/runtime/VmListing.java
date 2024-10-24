@@ -47,7 +47,14 @@ public final class VmListing extends VmListingOrMapping<VmListing> {
       VmObject parent,
       UnmodifiableEconomicMap<Object, ObjectMember> members,
       int length) {
-    super(enclosingFrame, Objects.requireNonNull(parent), members, null, null, null);
+    super(
+        enclosingFrame,
+        Objects.requireNonNull(parent),
+        members,
+        EconomicMaps.create(),
+        null,
+        null,
+        null);
     this.length = length;
   }
 
@@ -63,6 +70,7 @@ public final class VmListing extends VmListingOrMapping<VmListing> {
         enclosingFrame,
         Objects.requireNonNull(parent),
         members,
+        EconomicMaps.create(),
         delegate,
         typeCheckNode,
         typeNodeFrame);
