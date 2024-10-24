@@ -105,13 +105,11 @@ public abstract class EntriesLiteralNode extends SpecializedObjectLiteralNode {
 
   @Specialization(guards = "checkIsValidListingAmendment()")
   protected VmListing evalListing(VirtualFrame frame, VmListing parent) {
-    // TODO: Assert members does not contain deletions?
-    return new VmListing(
+    return VmListing.create(
         frame.materialize(),
         parent,
         createListMembers(frame, parent.getLength()),
-        EconomicMaps.create(),
-        parent.getLength() + keyNodes.length);
+        parent.getLength());
   }
 
   @Specialization

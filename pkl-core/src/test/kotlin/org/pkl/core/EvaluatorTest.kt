@@ -86,51 +86,31 @@ class EvaluatorTest {
       evaluator.evaluateOutputText(
         text(
           """
-    local listing: Listing = new { 1; 2; 3 }
-    local mapping: Mapping = new { ["a"] = 1; ["b"] = 2 }
-    local dynamic: Dynamic = new {
-      1
-      2
-      3
-      ["foo"] = 0
-      ["bar"] = 1
-      foo = "foo"
-      bar = "bar"
-    }
-    local list: List<Int> = List(1, 2, 3)
-    local map: Map<String, Int> = Map("zz", 1, "yy", 2)
-    local intseq: IntSeq = IntSeq(0, 5).step(2)
-    local set: Set<Int> = Set(10, 20, 30)
-
-    prop = new Dynamic {
-      ...mapping
-      ...listing
-      ...dynamic
-      ...list
-      ...map
-      ...intseq
-      ...set
-    }.length()
-    """
+              prop = (new Listing {
+                "foo"
+                "bar----"
+                "baz//"
+              }) {
+                [0] = delete
+                this[0] + "EEK"
+              }
+          """
             .trimIndent()
         )
       )
-    assertThat(result).isEqualTo("prop = 15")
 
-    //          prop = (new Listing {
-    //            "foo"
-    //            "bar"
-    //            "baz"
-    //          }) {
-    //            [0] = delete
-    //            this[0] + "EEK"
-    //          }
-    //    """
-    //            .trimIndent()
-    //        )
-    //      )
-    //
-    // assertThat(result).doesNotContain("foo").contains("bar").contains("baz").contains("barEEK")
+    assertThat(result)
+      .isEqualTo(
+        """
+          prop {
+            "bar----"
+            "baz//"
+            "bar----EEK"
+          }
+
+        """
+          .trimIndent()
+      )
   }
 
   @Test

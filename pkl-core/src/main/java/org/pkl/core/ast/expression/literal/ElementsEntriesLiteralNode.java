@@ -89,21 +89,13 @@ public abstract class ElementsEntriesLiteralNode extends SpecializedObjectLitera
   @Specialization(guards = "checkIsValidListingAmendment()")
   protected VmListing evalListing(VirtualFrame frame, VmListing parent) {
     var members = createMembers(frame, parent.getLength());
-    var deletionData = VmUtils.DeletionData.create(members, parent.getLength() + elements.length);
-    return new VmListing(
-        frame.materialize(), parent, members, deletionData.cachedValues(), deletionData.length());
+    return VmListing.create(frame.materialize(), parent, members, parent.getLength());
   }
 
   @Specialization
   protected VmDynamic evalDynamic(VirtualFrame frame, VmDynamic parent) {
     var members = createMembers(frame, parent.getLength());
-    var deletionData = VmUtils.DeletionData.create(members, parent.getLength() + elements.length);
-    return new VmDynamic(
-        frame.materialize(),
-        parent,
-        createMembers(frame, parent.getLength()),
-        deletionData.cachedValues(),
-        deletionData.length());
+    return VmDynamic.create(frame.materialize(), parent, members, parent.getLength());
   }
 
   @Specialization

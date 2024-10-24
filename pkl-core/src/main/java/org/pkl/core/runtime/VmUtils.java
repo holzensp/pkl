@@ -711,6 +711,27 @@ public final class VmUtils {
     return (EconomicSet<Long>) cachedValues.get(DELETED_INDICES_KEY);
   }
 
+  public static int expectedLength(
+      VmObject parent, UnmodifiableEconomicMap<Object, ObjectMember> members) {
+    var parentLength =
+        parent instanceof VmDynamic d
+            ? d.getLength()
+            : parent instanceof VmListing l ? l.getLength() : 0;
+    var expectedLength = parentLength;
+    var cursor = members.getEntries();
+    while (cursor.advance()) {
+      var member = cursor.getValue();
+      if (member.isElement()) {
+        expectedLength++;
+        continue;
+      }
+      if (member.isDelete() && cursor.getKey() instanceof Long && parentLength > 0) {
+        expectedLength--;
+      }
+    }
+    return expectedLength;
+  }
+
   public static boolean breakPoint(
       @Nullable VmObject parent,
       EconomicMap<Object, Object> cachedValues,
@@ -725,17 +746,16 @@ public final class VmUtils {
 
     public static DeletionData create(
         UnmodifiableEconomicMap<Object, ObjectMember> members, int length) {
+      var extraLength = 0;
       var hasElements = length > 0;
 
       var indices = new TreeSet<Long>();
       var keys = EconomicSet.create();
 
       for (var member : members.getValues()) {
-        if (hasElements) {
-          break;
-        }
-        hasElements = member.isElement();
+        if (member.isElement()) extraLength++;
       }
+      hasElements = hasElements || extraLength > 0;
 
       for (var memberKey : members.getKeys()) {
         var member = members.get(memberKey);
@@ -766,7 +786,8 @@ public final class VmUtils {
         throw new PklBugException("Deletion of non existing elements");
       }
       return new DeletionData(
-          cachedValues, deletedIndices == null ? length : length - deletedIndices.size());
+          cachedValues,
+          length + extraLength - (deletedIndices == null ? 0 : deletedIndices.size()));
     }
   }
 
