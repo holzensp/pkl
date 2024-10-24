@@ -127,6 +127,7 @@ public final class IntSeqNodes {
           VmUtils.createEmptyMaterializedFrame(),
           BaseModule.getListingClass().getPrototype(),
           result,
+          EconomicMaps.create(),
           result.size());
     }
   }

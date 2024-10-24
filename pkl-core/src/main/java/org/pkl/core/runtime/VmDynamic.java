@@ -18,6 +18,7 @@ package org.pkl.core.runtime;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import java.util.Objects;
+import org.graalvm.collections.EconomicMap;
 import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.pkl.core.PClassInfo;
 import org.pkl.core.PObject;
@@ -34,6 +35,7 @@ public final class VmDynamic extends VmObject {
             VmUtils.createEmptyMaterializedFrame(),
             BaseModule.getDynamicClass().getPrototype(),
             EconomicMaps.create(),
+            EconomicMaps.create(),
             0);
   }
 
@@ -47,8 +49,9 @@ public final class VmDynamic extends VmObject {
       MaterializedFrame enclosingFrame,
       VmObject parent,
       UnmodifiableEconomicMap<Object, ObjectMember> members,
+      EconomicMap<Object, Object> cachedValues,
       int length) {
-    super(enclosingFrame, Objects.requireNonNull(parent), members, EconomicMaps.create());
+    super(enclosingFrame, Objects.requireNonNull(parent), members, cachedValues);
     this.length = length;
   }
 

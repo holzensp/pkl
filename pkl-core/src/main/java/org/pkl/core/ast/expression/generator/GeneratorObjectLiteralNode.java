@@ -32,6 +32,7 @@ import org.pkl.core.ast.expression.literal.AmendFunctionNode;
 import org.pkl.core.ast.expression.literal.ObjectLiteralNode;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.*;
+import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.Nullable;
 
 /** An object literal node that contains at least one for- or when-expression. */
@@ -74,7 +75,14 @@ public abstract class GeneratorObjectLiteralNode extends ObjectLiteralNode {
   @Specialization(guards = "checkObjectCannotHaveParameters()")
   protected VmDynamic evalDynamic(VirtualFrame frame, VmDynamic parent) {
     var data = createData(frame, parent, parent.getLength());
-    var result = new VmDynamic(frame.materialize(), parent, data.members, data.length);
+    var deletionData = VmUtils.DeletionData.create(data.members, data.length);
+    var result =
+        new VmDynamic(
+            frame.materialize(),
+            parent,
+            data.members,
+            deletionData.cachedValues(),
+            deletionData.length());
     result.setExtraStorage(data.forBindings);
     return result;
   }
@@ -90,7 +98,14 @@ public abstract class GeneratorObjectLiteralNode extends ObjectLiteralNode {
   @Specialization(guards = "checkListingCannotHaveParameters()")
   protected VmListing evalListing(VirtualFrame frame, VmListing parent) {
     var data = createData(frame, parent, parent.getLength());
-    var result = new VmListing(frame.materialize(), parent, data.members, data.length);
+    var deletionData = VmUtils.DeletionData.create(data.members, data.length);
+    var result =
+        new VmListing(
+            frame.materialize(),
+            parent,
+            data.members,
+            deletionData.cachedValues(),
+            deletionData.length());
     result.setExtraStorage(data.forBindings);
     return result;
   }
@@ -123,8 +138,14 @@ public abstract class GeneratorObjectLiteralNode extends ObjectLiteralNode {
   protected VmDynamic evalDynamicClass(
       VirtualFrame frame, @SuppressWarnings("unused") VmClass parent) {
     var data = createData(frame, parent, 0);
+    // TODO: Assert members does not contain deletions?
     var result =
-        new VmDynamic(frame.materialize(), parent.getPrototype(), data.members, data.length);
+        new VmDynamic(
+            frame.materialize(),
+            parent.getPrototype(),
+            data.members,
+            EconomicMaps.create(),
+            data.length);
     result.setExtraStorage(data.forBindings);
     return result;
   }
@@ -142,8 +163,14 @@ public abstract class GeneratorObjectLiteralNode extends ObjectLiteralNode {
   protected VmListing evalListingClass(
       VirtualFrame frame, @SuppressWarnings("unused") VmClass parent) {
     var data = createData(frame, parent, 0);
+    var deletionData = VmUtils.DeletionData.create(data.members, data.length);
     var result =
-        new VmListing(frame.materialize(), parent.getPrototype(), data.members, data.length);
+        new VmListing(
+            frame.materialize(),
+            parent.getPrototype(),
+            data.members,
+            deletionData.cachedValues(),
+            deletionData.length());
     result.setExtraStorage(data.forBindings);
     return result;
   }

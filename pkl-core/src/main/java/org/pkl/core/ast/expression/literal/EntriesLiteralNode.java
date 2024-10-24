@@ -94,15 +94,23 @@ public abstract class EntriesLiteralNode extends SpecializedObjectLiteralNode {
 
   @Specialization
   protected VmDynamic evalDynamic(VirtualFrame frame, VmDynamic parent) {
-    return new VmDynamic(frame.materialize(), parent, createMapMembers(frame), parent.getLength());
+    // TODO: Assert members does not contain deletions?
+    return new VmDynamic(
+        frame.materialize(),
+        parent,
+        createMapMembers(frame),
+        EconomicMaps.create(),
+        parent.getLength());
   }
 
   @Specialization(guards = "checkIsValidListingAmendment()")
   protected VmListing evalListing(VirtualFrame frame, VmListing parent) {
+    // TODO: Assert members does not contain deletions?
     return new VmListing(
         frame.materialize(),
         parent,
         createListMembers(frame, parent.getLength()),
+        EconomicMaps.create(),
         parent.getLength() + keyNodes.length);
   }
 
@@ -132,10 +140,12 @@ public abstract class EntriesLiteralNode extends SpecializedObjectLiteralNode {
   @Specialization(guards = "parent == getDynamicClass()")
   protected VmDynamic evalDynamicClass(
       VirtualFrame frame, @SuppressWarnings("unused") VmClass parent) {
+    // TODO: Assert members does not contain deletions?
     return new VmDynamic(
         frame.materialize(),
         BaseModule.getDynamicClass().getPrototype(),
         createMapMembers(frame),
+        EconomicMaps.create(),
         0);
   }
 

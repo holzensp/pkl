@@ -20,6 +20,7 @@ import com.oracle.truffle.api.nodes.IndirectCallNode;
 import org.pkl.core.runtime.*;
 import org.pkl.core.stdlib.ExternalMethod0Node;
 import org.pkl.core.stdlib.ExternalMethod1Node;
+import org.pkl.core.util.EconomicMaps;
 
 public final class TypedNodes {
   private TypedNodes() {}
@@ -72,6 +73,7 @@ public final class TypedNodes {
               VmUtils.createEmptyMaterializedFrame(),
               BaseModule.getDynamicClass().getPrototype(),
               self.getVmClass().getTypedToDynamicMembers(),
+              EconomicMaps.create(),
               0);
       result.setExtraStorage(self);
       return result;

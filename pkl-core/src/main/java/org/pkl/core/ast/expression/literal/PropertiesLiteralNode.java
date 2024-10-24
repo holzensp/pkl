@@ -27,6 +27,7 @@ import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.*;
+import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.Nullable;
 
 /** Object literal that contains properties but not elements or entries. */
@@ -84,12 +85,16 @@ public abstract class PropertiesLiteralNode extends SpecializedObjectLiteralNode
 
   @Specialization
   protected Object evalDynamic(VirtualFrame frame, VmDynamic parent) {
-    return new VmDynamic(frame.materialize(), parent, members, parent.getLength());
+    // TODO: Assert members does not contain deletions?
+    return new VmDynamic(
+        frame.materialize(), parent, members, EconomicMaps.create(), parent.getLength());
   }
 
   @Specialization(guards = "checkIsValidListingAmendment()")
   protected Object evalListing(VirtualFrame frame, VmListing parent) {
-    return new VmListing(frame.materialize(), parent, members, parent.getLength());
+    // TODO: Assert members does not contain deletions?
+    return new VmListing(
+        frame.materialize(), parent, members, EconomicMaps.create(), parent.getLength());
   }
 
   @ExplodeLoop
@@ -145,8 +150,13 @@ public abstract class PropertiesLiteralNode extends SpecializedObjectLiteralNode
       @SuppressWarnings("unused") VmClass parent,
       @Cached("parent") @SuppressWarnings("unused") VmClass cachedParent) {
 
+    // TODO: Assert members does not contain deletions?
     return new VmListing(
-        frame.materialize(), BaseModule.getListingClass().getPrototype(), members, 0);
+        frame.materialize(),
+        BaseModule.getListingClass().getPrototype(),
+        members,
+        EconomicMaps.create(),
+        0);
   }
 
   @Specialization(
@@ -169,8 +179,13 @@ public abstract class PropertiesLiteralNode extends SpecializedObjectLiteralNode
       @SuppressWarnings("unused") VmClass parent,
       @Cached("parent") @SuppressWarnings("unused") VmClass cachedParent) {
 
+    // TODO: Assert members does not contain deletions?
     return new VmDynamic(
-        frame.materialize(), BaseModule.getDynamicClass().getPrototype(), members, 0);
+        frame.materialize(),
+        BaseModule.getDynamicClass().getPrototype(),
+        members,
+        EconomicMaps.create(),
+        0);
   }
 
   // slow but very unlikely to occur in practice
@@ -188,8 +203,13 @@ public abstract class PropertiesLiteralNode extends SpecializedObjectLiteralNode
     }
 
     if (parent.isDynamicClass()) {
+      // TODO: Assert members does not contain deletions?
       return new VmDynamic(
-          frame.materialize(), BaseModule.getDynamicClass().getPrototype(), members, 0);
+          frame.materialize(),
+          BaseModule.getDynamicClass().getPrototype(),
+          members,
+          EconomicMaps.create(),
+          0);
     }
 
     checkIsValidTypedAmendment(parent);

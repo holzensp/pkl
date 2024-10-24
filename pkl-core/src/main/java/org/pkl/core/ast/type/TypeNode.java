@@ -1588,6 +1588,7 @@ public abstract class TypeNode extends PklNode {
               VmUtils.createEmptyMaterializedFrame(),
               BaseModule.getListingClass().getPrototype(),
               EconomicMaps.create(),
+              EconomicMaps.create(),
               0);
         }
 
@@ -1638,6 +1639,7 @@ public abstract class TypeNode extends PklNode {
             VmUtils.createEmptyMaterializedFrame(),
             BaseModule.getListingClass().getPrototype(),
             EconomicMaps.of(Identifier.DEFAULT, defaultMember),
+            EconomicMaps.create(),
             0);
       }
 

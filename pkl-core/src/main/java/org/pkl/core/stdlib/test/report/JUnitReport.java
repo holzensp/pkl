@@ -170,6 +170,7 @@ public final class JUnitReport implements TestReport {
         VmUtils.createEmptyMaterializedFrame(),
         BaseModule.getDynamicClass().getPrototype(),
         members,
+        EconomicMaps.create(),
         members.size() - 4);
   }
 

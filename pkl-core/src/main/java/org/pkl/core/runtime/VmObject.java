@@ -129,17 +129,59 @@ public abstract class VmObject extends VmObjectLike {
   @Override
   @TruffleBoundary
   public final boolean iterateMembers(BiFunction<Object, ObjectMember, Boolean> consumer) {
-    var parent = getParent();
-    if (parent != null) {
-      var completed = parent.iterateMembers(consumer);
-      if (!completed) return false;
+    var ancestors = new ArrayDeque<VmObject>();
+    var deletedKeys = new HashMap<Object, Integer>();
+    var deletedIndices = new ArrayDeque<SortedSet<Long>>();
+    var hasElements =
+        this instanceof VmDynamic dynamic
+            ? dynamic.hasElements()
+            : this instanceof VmListing listing && !listing.isEmpty();
+
+    for (var owner = this; owner != null; owner = owner.getParent()) {
+      ancestors.addFirst(owner);
+      var keysDeletedHere = VmUtils.getDeletedKeys(owner.cachedValues);
+      for (var key : keysDeletedHere == null ? Collections.EMPTY_LIST : keysDeletedHere) {
+        deletedKeys.compute(key, (k, v) -> v == null ? 1 : v + 1);
+      }
+      var indicesDeletedHere = VmUtils.getDeletedIndices(owner.cachedValues);
+      if (indicesDeletedHere != null) {
+        var indices = new TreeSet<Long>();
+        for (var index : indicesDeletedHere) {
+          indices.add(index);
+        }
+        deletedIndices.push(indices);
+      }
     }
-    var entries = members.getEntries();
-    while (entries.advance()) {
-      var member = entries.getValue();
-      if (member.isLocal()) continue;
-      if (!consumer.apply(entries.getKey(), member)) return false;
+
+    while (!ancestors.isEmpty()) {
+      var current = ancestors.peek();
+
+      var entries = current.members.getEntries();
+      while (entries.advance()) {
+        var definitionKey = entries.getKey();
+        var referenceKey =
+            new VmUtils.KeyNormalizer(deletedKeys, deletedIndices, hasElements)
+                .toReferenceKey(definitionKey);
+
+        var member = entries.getValue();
+        if (member.isLocal() || referenceKey == null) {
+          continue;
+        }
+
+        if (!consumer.apply(referenceKey, member)) return false;
+      }
+
+      ancestors.pop();
+
+      var keysDeletedHere = VmUtils.getDeletedKeys(current.cachedValues);
+      for (var key : keysDeletedHere == null ? Collections.EMPTY_LIST : keysDeletedHere) {
+        deletedKeys.compute(key, (k, v) -> Objects.requireNonNull(v) == 1 ? null : v - 1);
+      }
+      if (VmUtils.getDeletedIndices(current.cachedValues) != null) {
+        deletedIndices.pop();
+      }
     }
+    assert deletedKeys.isEmpty() && deletedIndices.isEmpty();
     return true;
   }
 
@@ -151,23 +193,49 @@ public abstract class VmObject extends VmObjectLike {
 
     if (recurse) forced = true;
 
+    var deletedKeys = new HashMap<Object, Integer>();
+    var deletedIndices = new ArrayDeque<SortedSet<Long>>();
+    var hasElements =
+        this instanceof VmDynamic dynamic
+            ? dynamic.hasElements()
+            : this instanceof VmListing listing && !listing.isEmpty();
+
     try {
-      for (VmObjectLike owner = this; owner != null; owner = owner.getParent()) {
-        var cursor = EconomicMaps.getEntries(owner.getMembers());
+      for (var owner = this; owner != null; owner = owner.getParent()) {
+
+        var indicesDeletedHere = VmUtils.getDeletedIndices(owner.cachedValues);
+        if (indicesDeletedHere != null) {
+          var indices = new TreeSet<Long>();
+          for (var index : indicesDeletedHere) {
+            indices.add(index);
+          }
+          deletedIndices.push(indices);
+        }
+        var keysDeletedHere = VmUtils.getDeletedKeys(owner.cachedValues);
+        for (var key : keysDeletedHere == null ? Collections.EMPTY_LIST : keysDeletedHere) {
+          deletedKeys.compute(key, (k, v) -> v == null ? 1 : v + 1);
+        }
+
+        var cursor = owner.members.getEntries();
         var clazz = owner.getVmClass();
         while (cursor.advance()) {
-          var memberKey = cursor.getKey();
+          var referenceKey =
+              new VmUtils.KeyNormalizer(deletedKeys, deletedIndices, hasElements)
+                  .toReferenceKey(cursor.getKey());
           var member = cursor.getValue();
+
           // isAbstract() can occur when VmAbstractObject.toString() is called
           // on a prototype of an abstract class (e.g., in the Java debugger)
-          if (member.isLocalOrExternalOrAbstractOrDelete() || clazz.isHiddenProperty(memberKey)) {
+          if (referenceKey == null
+              || member.isLocalOrExternalOrAbstractOrDelete()
+              || clazz.isHiddenProperty(referenceKey)) {
             continue;
           }
 
-          var memberValue = getCachedValue(memberKey);
+          var memberValue = getCachedValue(referenceKey);
           if (memberValue == null) {
             try {
-              memberValue = VmUtils.doReadMember(this, owner, memberKey, member);
+              memberValue = VmUtils.doReadMember(this, owner, referenceKey, member);
             } catch (VmUndefinedValueException e) {
               if (!allowUndefinedValues) throw e;
               continue;
@@ -213,4 +281,28 @@ public abstract class VmObject extends VmObjectLike {
 
     return result;
   }
+
+  //  private static class KeyBag {
+  //    private final HashMap<Object, Integer> bag = new HashMap<>();
+  //
+  //    public KeyBag() {}
+  //
+  //    public void addAll(@Nullable Iterable<Object> keys) {
+  //      if (keys == null) return;
+  //      for (var key : keys) {
+  //        bag.compute(key, (k, v) -> v == null ? 1 : v + 1);
+  //      }
+  //    }
+  //
+  //    public void removeAll(@Nullable Iterable<Object> keys) {
+  //      if (keys == null) return;
+  //      for (var key : keys) {
+  //        bag.compute(key, (k, v) -> Objects.requireNonNull(v) == 1 ? null : v - 1);
+  //      }
+  //    }
+  //
+  //    public boolean contains(Object key) {
+  //      return bag.containsKey(key);
+  //    }
+  //  }
 }

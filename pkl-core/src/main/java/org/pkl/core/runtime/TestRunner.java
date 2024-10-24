@@ -343,6 +343,7 @@ public final class TestRunner {
             EconomicMaps.of(
                 Identifier.EXAMPLES,
                 VmUtils.createSyntheticObjectProperty(Identifier.EXAMPLES, "examples", examples)),
+            EconomicMaps.create(),
             0);
     var builder = new StringBuilder();
     new PcfRenderer(builder, "  ", converter, false, true).renderDocument(outputFileContent);

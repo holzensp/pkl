@@ -127,6 +127,7 @@ public final class ParserNodes {
               VmUtils.createEmptyMaterializedFrame(),
               BaseModule.getListingClass().getPrototype(),
               members,
+              EconomicMaps.create(),
               EconomicMaps.size(members));
       currPath.pop();
     }
@@ -166,6 +167,7 @@ public final class ParserNodes {
                 VmUtils.createEmptyMaterializedFrame(),
                 BaseModule.getDynamicClass().getPrototype(),
                 members,
+                EconomicMaps.create(),
                 0);
       }
     }

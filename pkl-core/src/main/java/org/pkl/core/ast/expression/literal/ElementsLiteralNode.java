@@ -82,15 +82,23 @@ public abstract class ElementsLiteralNode extends SpecializedObjectLiteralNode {
       @Cached("createMembers(parentLength)")
           UnmodifiableEconomicMap<Object, ObjectMember> members) {
 
-    return new VmDynamic(frame.materialize(), parent, members, parentLength + elements.length);
+    // TODO: Assert members does not contain deletions?
+    return new VmDynamic(
+        frame.materialize(),
+        parent,
+        members,
+        EconomicMaps.create(),
+        parentLength + elements.length);
   }
 
   @Specialization
   protected VmDynamic evalDynamicUncached(VirtualFrame frame, VmDynamic parent) {
+    // TODO: Assert members does not contain deletions?
     return new VmDynamic(
         frame.materialize(),
         parent,
         createMembers(parent.getLength()),
+        EconomicMaps.create(),
         parent.getLength() + elements.length);
   }
 
@@ -122,8 +130,13 @@ public abstract class ElementsLiteralNode extends SpecializedObjectLiteralNode {
       @Cached(value = "createMembers(0)", neverDefault = true)
           UnmodifiableEconomicMap<Object, ObjectMember> members) {
 
+    // TODO: Assert members does not contain deletions?
     return new VmListing(
-        frame.materialize(), BaseModule.getListingClass().getPrototype(), members, elements.length);
+        frame.materialize(),
+        BaseModule.getListingClass().getPrototype(),
+        members,
+        EconomicMaps.create(),
+        elements.length);
   }
 
   @Specialization(guards = "parent == getDynamicClass()")
@@ -132,8 +145,13 @@ public abstract class ElementsLiteralNode extends SpecializedObjectLiteralNode {
       @SuppressWarnings("unused") VmClass parent,
       @Cached(value = "createMembers(0)", neverDefault = true)
           UnmodifiableEconomicMap<Object, ObjectMember> members) {
+    // TODO: Assert members does not contain deletions?
     return new VmDynamic(
-        frame.materialize(), BaseModule.getDynamicClass().getPrototype(), members, elements.length);
+        frame.materialize(),
+        BaseModule.getDynamicClass().getPrototype(),
+        members,
+        EconomicMaps.create(),
+        elements.length);
   }
 
   @Specialization(
@@ -149,16 +167,24 @@ public abstract class ElementsLiteralNode extends SpecializedObjectLiteralNode {
       @Cached("createMembers(parentLength)")
           UnmodifiableEconomicMap<Object, ObjectMember> properties) {
 
-    return new VmListing(frame.materialize(), parent, properties, parentLength + elements.length);
+    // TODO: Assert members does not contain deletions?
+    return new VmListing(
+        frame.materialize(),
+        parent,
+        properties,
+        EconomicMaps.create(),
+        parentLength + elements.length);
   }
 
   @Specialization(guards = "checkIsValidListingAmendment()")
   protected VmListing evalListingUncached(VirtualFrame frame, VmListing parent) {
     checkMaxListingMemberIndex(parent.getLength());
+    // TODO: Assert members does not contain deletions?
     return new VmListing(
         frame.materialize(),
         parent,
         createMembers(parent.getLength()),
+        EconomicMaps.create(),
         parent.getLength() + elements.length);
   }
 

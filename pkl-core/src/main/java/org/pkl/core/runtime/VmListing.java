@@ -20,6 +20,7 @@ import com.oracle.truffle.api.frame.MaterializedFrame;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import org.graalvm.collections.EconomicMap;
 import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.pkl.core.ast.member.ListingOrMappingTypeCastNode;
 import org.pkl.core.ast.member.ObjectMember;
@@ -32,6 +33,7 @@ public final class VmListing extends VmListingOrMapping<VmListing> {
         new VmListing(
             VmUtils.createEmptyMaterializedFrame(),
             BaseModule.getListingClass().getPrototype(),
+            EconomicMaps.create(),
             EconomicMaps.create(),
             0);
   }
@@ -46,15 +48,9 @@ public final class VmListing extends VmListingOrMapping<VmListing> {
       MaterializedFrame enclosingFrame,
       VmObject parent,
       UnmodifiableEconomicMap<Object, ObjectMember> members,
+      EconomicMap<Object, Object> cachedValues,
       int length) {
-    super(
-        enclosingFrame,
-        Objects.requireNonNull(parent),
-        members,
-        EconomicMaps.create(),
-        null,
-        null,
-        null);
+    super(enclosingFrame, Objects.requireNonNull(parent), members, cachedValues, null, null, null);
     this.length = length;
   }
 

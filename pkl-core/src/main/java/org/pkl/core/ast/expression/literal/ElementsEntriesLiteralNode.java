@@ -88,20 +88,22 @@ public abstract class ElementsEntriesLiteralNode extends SpecializedObjectLitera
 
   @Specialization(guards = "checkIsValidListingAmendment()")
   protected VmListing evalListing(VirtualFrame frame, VmListing parent) {
+    var members = createMembers(frame, parent.getLength());
+    var deletionData = VmUtils.DeletionData.create(members, parent.getLength() + elements.length);
     return new VmListing(
-        frame.materialize(),
-        parent,
-        createMembers(frame, parent.getLength()),
-        parent.getLength() + elements.length);
+        frame.materialize(), parent, members, deletionData.cachedValues(), deletionData.length());
   }
 
   @Specialization
   protected VmDynamic evalDynamic(VirtualFrame frame, VmDynamic parent) {
+    var members = createMembers(frame, parent.getLength());
+    var deletionData = VmUtils.DeletionData.create(members, parent.getLength() + elements.length);
     return new VmDynamic(
         frame.materialize(),
         parent,
         createMembers(frame, parent.getLength()),
-        parent.getLength() + elements.length);
+        deletionData.cachedValues(),
+        deletionData.length());
   }
 
   @Specialization
@@ -124,10 +126,12 @@ public abstract class ElementsEntriesLiteralNode extends SpecializedObjectLitera
   protected VmListing evalListingClass(
       VirtualFrame frame, @SuppressWarnings("unused") VmClass parent) {
 
+    // TODO: Assert members does not contain deletions?
     return new VmListing(
         frame.materialize(),
         BaseModule.getListingClass().getPrototype(),
         createMembers(frame, 0),
+        EconomicMaps.create(),
         elements.length);
   }
 
@@ -135,10 +139,12 @@ public abstract class ElementsEntriesLiteralNode extends SpecializedObjectLitera
   protected VmDynamic evalDynamicClass(
       VirtualFrame frame, @SuppressWarnings("unused") VmClass parent) {
 
+    // TODO: Assert members does not contain deletions?
     return new VmDynamic(
         frame.materialize(),
         BaseModule.getDynamicClass().getPrototype(),
         createMembers(frame, 0),
+        EconomicMaps.create(),
         elements.length);
   }
 
