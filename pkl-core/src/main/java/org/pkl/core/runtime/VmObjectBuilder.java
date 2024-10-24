@@ -60,6 +60,7 @@ public final class VmObjectBuilder {
         VmUtils.createEmptyMaterializedFrame(),
         BaseModule.getListingClass().getPrototype(),
         members,
+        EconomicMaps.create(),
         elementCount);
   }
 
@@ -81,6 +82,7 @@ public final class VmObjectBuilder {
         VmUtils.createEmptyMaterializedFrame(),
         BaseModule.getDynamicClass().getPrototype(),
         members,
+        EconomicMaps.create(),
         elementCount);
   }
 }

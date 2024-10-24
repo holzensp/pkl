@@ -20,6 +20,7 @@ import com.oracle.truffle.api.frame.MaterializedFrame;
 import java.util.Map;
 import java.util.Objects;
 import javax.annotation.concurrent.GuardedBy;
+import org.graalvm.collections.EconomicMap;
 import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.pkl.core.ast.member.ListingOrMappingTypeCastNode;
 import org.pkl.core.ast.member.ObjectMember;
@@ -50,15 +51,16 @@ public final class VmMapping extends VmListingOrMapping<VmMapping> {
       MaterializedFrame enclosingFrame,
       VmObject parent,
       UnmodifiableEconomicMap<Object, ObjectMember> members) {
+    this(enclosingFrame, parent, members, VmUtils.extractDeletionsIntoCachedValues(false, members));
+  }
 
-    super(
-        enclosingFrame,
-        Objects.requireNonNull(parent),
-        members,
-        EconomicMaps.create(),
-        null,
-        null,
-        null);
+  public VmMapping(
+      MaterializedFrame enclosingFrame,
+      VmObject parent,
+      UnmodifiableEconomicMap<Object, ObjectMember> members,
+      EconomicMap<Object, Object> cachedValues) {
+
+    super(enclosingFrame, Objects.requireNonNull(parent), members, cachedValues, null, null, null);
   }
 
   public VmMapping(

@@ -278,6 +278,7 @@ public final class PropertiesRendererNodes {
                 VmUtils.createEmptyMaterializedFrame(),
                 dynamic,
                 EconomicMaps.create(),
+                EconomicMaps.create(),
                 dynamic.getLength());
         visit(converter.convert(newValue, currPath));
       } else {

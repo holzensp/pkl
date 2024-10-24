@@ -26,6 +26,7 @@ import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.*;
+import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.Nullable;
 
 /**
@@ -70,18 +71,22 @@ public abstract class ConstantEntriesLiteralNode extends SpecializedObjectLitera
 
   @Specialization(guards = "checkIsValidMappingAmendment()")
   protected VmMapping evalMapping(VirtualFrame frame, VmMapping parent) {
-    return new VmMapping(frame.materialize(), parent, members);
+    var cachedValues = VmUtils.extractDeletionsIntoCachedValues(false, members);
+    return new VmMapping(frame.materialize(), parent, members, cachedValues);
   }
 
   @Specialization
   protected VmDynamic evalDynamic(VirtualFrame frame, VmDynamic parent) {
-    return new VmDynamic(frame.materialize(), parent, members, parent.getLength());
+    return new VmDynamic(
+        frame.materialize(), parent, members, EconomicMaps.create(), parent.getLength());
   }
 
   @Specialization(guards = "checkIsValidListingAmendment()")
   protected VmListing evalListing(VirtualFrame frame, VmListing parent) {
     checkMaxListingMemberIndex(parent.getLength());
-    return new VmListing(frame.materialize(), parent, members, parent.getLength());
+    var deletionData = VmUtils.DeletionData.create(members, parent.getLength());
+    return new VmListing(
+        frame.materialize(), parent, members, deletionData.cachedValues(), deletionData.length());
   }
 
   @Specialization
@@ -103,14 +108,23 @@ public abstract class ConstantEntriesLiteralNode extends SpecializedObjectLitera
   @Specialization(guards = {"parent == getMappingClass()", "checkIsValidMappingAmendment()"})
   protected VmMapping evalMappingClass(
       VirtualFrame frame, @SuppressWarnings("unused") VmClass parent) {
-    return new VmMapping(frame.materialize(), BaseModule.getMappingClass().getPrototype(), members);
+    return new VmMapping(
+        frame.materialize(),
+        BaseModule.getMappingClass().getPrototype(),
+        members,
+        VmUtils.extractDeletionsIntoCachedValues(false, members));
   }
 
   @Specialization(guards = "parent == getDynamicClass()")
   protected VmDynamic evalDynamicClass(
       VirtualFrame frame, @SuppressWarnings("unused") VmClass parent) {
+    // TODO: Assert members does not contain deletions?
     return new VmDynamic(
-        frame.materialize(), BaseModule.getDynamicClass().getPrototype(), members, 0);
+        frame.materialize(),
+        BaseModule.getDynamicClass().getPrototype(),
+        members,
+        EconomicMaps.create(),
+        0);
   }
 
   @Specialization(

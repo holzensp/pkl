@@ -329,6 +329,7 @@ public final class ParserNodes {
                 VmUtils.createEmptyMaterializedFrame(),
                 BaseModule.getListingClass().getPrototype(),
                 members,
+                EconomicMaps.create(),
                 size);
 
         if (!node.isRecursive()) {
@@ -375,6 +376,7 @@ public final class ParserNodes {
                 VmUtils.createEmptyMaterializedFrame(),
                 BaseModule.getListingClass().getPrototype(),
                 members,
+                EconomicMaps.create(),
                 size);
 
         if (!node.isRecursive()) {
@@ -431,6 +433,7 @@ public final class ParserNodes {
                   VmUtils.createEmptyMaterializedFrame(),
                   BaseModule.getDynamicClass().getPrototype(),
                   members,
+                  EconomicMaps.create(),
                   0);
         }
 

@@ -32,11 +32,16 @@ import java.util.*;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
+import org.graalvm.collections.EconomicMap;
+import org.graalvm.collections.EconomicSet;
+import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Engine;
 import org.organicdesign.fp.collections.ImMap;
 import org.pkl.core.PClassInfo;
 import org.pkl.core.PObject;
+import org.pkl.core.PklBugException;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.StackFrame;
@@ -683,6 +688,109 @@ public final class VmUtils {
             : new UntypedObjectMemberNode(language, descriptor, property, bodyNode));
 
     return property;
+  }
+
+  private static final Object DELETED_KEYS_KEY = new Object();
+  private static final Object DELETED_INDICES_KEY = new Object();
+
+  public static @Nullable EconomicSet<Object> getDeletedKeys(
+      EconomicMap<Object, Object> cachedValues) {
+    //noinspection unchecked
+    return (EconomicSet<Object>) cachedValues.get(DELETED_KEYS_KEY);
+  }
+
+  public static @Nullable EconomicSet<Long> getDeletedIndices(
+      EconomicMap<Object, Object> cachedValues) {
+    //noinspection unchecked
+    return (EconomicSet<Long>) cachedValues.get(DELETED_INDICES_KEY);
+  }
+
+  public static boolean breakPoint(
+      EconomicMap<Object, Object> cachedValues,
+      UnmodifiableEconomicMap<Object, ObjectMember> members) {
+    if (getDeletedKeys(cachedValues) != null || getDeletedIndices(cachedValues) != null)
+      return false;
+    return StreamSupport.stream(members.getValues().spliterator(), true).anyMatch(Member::isDelete);
+  }
+
+  public record DeletionData(EconomicMap<Object, Object> cachedValues, int length) {
+
+    public static DeletionData create(
+        UnmodifiableEconomicMap<Object, ObjectMember> members, int length) {
+      var hasElements = length > 0;
+      var cachedValues = VmUtils.extractDeletionsIntoCachedValues(hasElements, members);
+      var deletedIndices = VmUtils.getDeletedIndices(cachedValues);
+      if (!hasElements && deletedIndices != null) {
+        throw new PklBugException("Deletion of non existing elements");
+      }
+      return new DeletionData(
+          cachedValues, deletedIndices == null ? length : length - deletedIndices.size());
+    }
+  }
+
+  @TruffleBoundary
+  public static EconomicMap<Object, Object> extractDeletionsIntoCachedValues(
+      boolean hasElements, UnmodifiableEconomicMap<Object, ObjectMember> members) {
+
+    var indices = new TreeSet<Long>();
+    var keys = EconomicSet.create();
+
+    for (var member : members.getValues()) {
+      if (hasElements) {
+        break;
+      }
+      hasElements = member.isElement();
+    }
+
+    for (var memberKey : members.getKeys()) {
+      var member = members.get(memberKey);
+      if (!member.isDelete()) {
+        continue;
+      }
+      if (memberKey instanceof Long key && hasElements) {
+        indices.add(key);
+      } else {
+        keys.add(memberKey);
+      }
+    }
+
+    var cachedValues = EconomicMaps.create();
+
+    if (!keys.isEmpty()) {
+      cachedValues.put(DELETED_KEYS_KEY, keys);
+    }
+
+    if (!indices.isEmpty()) {
+      EconomicSet<Long> deletedIndices = EconomicSet.create(indices.size());
+      deletedIndices.addAll(indices);
+      cachedValues.put(DELETED_INDICES_KEY, deletedIndices);
+    }
+
+    return cachedValues;
+  }
+
+  public record KeyNormalizer(
+      HashMap<Object, Integer> deletedKeys,
+      Deque<SortedSet<Long>> deletedIndices,
+      boolean hasElements) {
+
+    public @Nullable Object toReferenceKey(Object definitionKey) {
+      if (deletedKeys.containsKey(definitionKey)) {
+        return null;
+      }
+      if (!(definitionKey instanceof Long index) || !hasElements) {
+        return definitionKey;
+      }
+
+      for (var indicesDeletedHere : deletedIndices) {
+        if (indicesDeletedHere.contains(index)) {
+          return null;
+        }
+        index -= indicesDeletedHere.subSet(0L, index).size();
+      }
+
+      return index;
+    }
   }
 
   public static TypeNode[] resolveParameterTypes(

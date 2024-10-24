@@ -85,6 +85,7 @@ public final class ListingNodes {
           VmUtils.createEmptyMaterializedFrame(),
           BaseModule.getListingClass().getPrototype(),
           newMembers,
+          EconomicMaps.create(),
           newMembers.size());
     }
   }
@@ -112,6 +113,7 @@ public final class ListingNodes {
           VmUtils.createEmptyMaterializedFrame(),
           BaseModule.getListingClass().getPrototype(),
           newMembers,
+          EconomicMaps.create(),
           newMembers.size());
     }
   }
