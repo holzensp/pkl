@@ -46,10 +46,11 @@ public abstract class VmListingOrMapping<SELF extends VmListingOrMapping<SELF>> 
       MaterializedFrame enclosingFrame,
       @Nullable VmObject parent,
       UnmodifiableEconomicMap<Object, ObjectMember> members,
+      EconomicMap<Object, Object> cachedValues,
       @Nullable SELF delegate,
       @Nullable ListingOrMappingTypeCastNode typeCastNode,
       @Nullable MaterializedFrame typeNodeFrame) {
-    super(enclosingFrame, parent, members);
+    super(enclosingFrame, parent, members, cachedValues);
     this.delegate = delegate;
     this.typeCastNode = typeCastNode;
     this.typeNodeFrame = typeNodeFrame;
