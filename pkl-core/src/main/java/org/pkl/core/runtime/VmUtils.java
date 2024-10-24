@@ -243,9 +243,15 @@ public final class VmUtils {
     if (cachedValue != null) return cachedValue;
 
     for (var owner = receiver; owner != null; owner = owner.getParent()) {
-      var member = owner.getMember(memberKey);
-      if (member == null) continue;
-      return doReadMember(receiver, owner, memberKey, member, checkType, callNode);
+      var key = (owner instanceof VmObject obj) ? obj.toDefinitionKey(memberKey) : memberKey;
+      if (key == null) {
+        return null;
+      }
+      var member = owner.getMember(key);
+      if (member != null) {
+        return doReadMember(receiver, owner, key, member, checkType, callNode);
+      }
+      memberKey = key;
     }
 
     return null;
@@ -706,8 +712,10 @@ public final class VmUtils {
   }
 
   public static boolean breakPoint(
+      @Nullable VmObject parent,
       EconomicMap<Object, Object> cachedValues,
-      UnmodifiableEconomicMap<Object, ObjectMember> members) {
+      UnmodifiableEconomicMap<Object, ObjectMember> members,
+      int length) {
     if (getDeletedKeys(cachedValues) != null || getDeletedIndices(cachedValues) != null)
       return false;
     return StreamSupport.stream(members.getValues().spliterator(), true).anyMatch(Member::isDelete);
@@ -718,7 +726,41 @@ public final class VmUtils {
     public static DeletionData create(
         UnmodifiableEconomicMap<Object, ObjectMember> members, int length) {
       var hasElements = length > 0;
-      var cachedValues = VmUtils.extractDeletionsIntoCachedValues(hasElements, members);
+
+      var indices = new TreeSet<Long>();
+      var keys = EconomicSet.create();
+
+      for (var member : members.getValues()) {
+        if (hasElements) {
+          break;
+        }
+        hasElements = member.isElement();
+      }
+
+      for (var memberKey : members.getKeys()) {
+        var member = members.get(memberKey);
+        if (!member.isDelete()) {
+          continue;
+        }
+        if (memberKey instanceof Long key && hasElements) {
+          indices.add(key);
+        } else {
+          keys.add(memberKey);
+        }
+      }
+
+      var cachedValues = EconomicMaps.create();
+
+      if (!keys.isEmpty()) {
+        cachedValues.put(DELETED_KEYS_KEY, keys);
+      }
+
+      if (!indices.isEmpty()) {
+        EconomicSet<Long> deletedIndices = EconomicSet.create(indices.size());
+        deletedIndices.addAll(indices);
+        cachedValues.put(DELETED_INDICES_KEY, deletedIndices);
+      }
+
       var deletedIndices = VmUtils.getDeletedIndices(cachedValues);
       if (!hasElements && deletedIndices != null) {
         throw new PklBugException("Deletion of non existing elements");
@@ -731,42 +773,8 @@ public final class VmUtils {
   @TruffleBoundary
   public static EconomicMap<Object, Object> extractDeletionsIntoCachedValues(
       boolean hasElements, UnmodifiableEconomicMap<Object, ObjectMember> members) {
-
-    var indices = new TreeSet<Long>();
-    var keys = EconomicSet.create();
-
-    for (var member : members.getValues()) {
-      if (hasElements) {
-        break;
-      }
-      hasElements = member.isElement();
-    }
-
-    for (var memberKey : members.getKeys()) {
-      var member = members.get(memberKey);
-      if (!member.isDelete()) {
-        continue;
-      }
-      if (memberKey instanceof Long key && hasElements) {
-        indices.add(key);
-      } else {
-        keys.add(memberKey);
-      }
-    }
-
-    var cachedValues = EconomicMaps.create();
-
-    if (!keys.isEmpty()) {
-      cachedValues.put(DELETED_KEYS_KEY, keys);
-    }
-
-    if (!indices.isEmpty()) {
-      EconomicSet<Long> deletedIndices = EconomicSet.create(indices.size());
-      deletedIndices.addAll(indices);
-      cachedValues.put(DELETED_INDICES_KEY, deletedIndices);
-    }
-
-    return cachedValues;
+    var deletionData = DeletionData.create(members, hasElements ? 1 : 0);
+    return deletionData.cachedValues();
   }
 
   public record KeyNormalizer(

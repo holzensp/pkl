@@ -73,6 +73,17 @@ public final class VmListing extends VmListingOrMapping<VmListing> {
     this.length = length;
   }
 
+  public static VmListing create(
+      MaterializedFrame enclosingFrame,
+      VmObject parent,
+      UnmodifiableEconomicMap<Object, ObjectMember> members) {
+    var deletionData =
+        VmUtils.DeletionData.create(
+            members, parent instanceof VmDynamic dynamic ? dynamic.getLength() : 0);
+    return new VmListing(
+        enclosingFrame, parent, members, deletionData.cachedValues(), deletionData.length());
+  }
+
   public static boolean isDefaultProperty(Object propertyKey) {
     return propertyKey == Identifier.DEFAULT;
   }

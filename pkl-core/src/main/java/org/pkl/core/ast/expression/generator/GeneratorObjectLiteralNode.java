@@ -75,14 +75,7 @@ public abstract class GeneratorObjectLiteralNode extends ObjectLiteralNode {
   @Specialization(guards = "checkObjectCannotHaveParameters()")
   protected VmDynamic evalDynamic(VirtualFrame frame, VmDynamic parent) {
     var data = createData(frame, parent, parent.getLength());
-    var deletionData = VmUtils.DeletionData.create(data.members, data.length);
-    var result =
-        new VmDynamic(
-            frame.materialize(),
-            parent,
-            data.members,
-            deletionData.cachedValues(),
-            deletionData.length());
+    var result = VmDynamic.create(frame.materialize(), parent, data.members, data.length);
     result.setExtraStorage(data.forBindings);
     return result;
   }

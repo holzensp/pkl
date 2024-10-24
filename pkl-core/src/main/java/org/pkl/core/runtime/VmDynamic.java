@@ -55,6 +55,16 @@ public final class VmDynamic extends VmObject {
     this.length = length;
   }
 
+  public static VmDynamic create(
+      MaterializedFrame enclosingFrame,
+      VmObject parent,
+      UnmodifiableEconomicMap<Object, ObjectMember> members,
+      int length) {
+    var deletionData = VmUtils.DeletionData.create(members, length);
+    return new VmDynamic(
+        enclosingFrame, parent, members, deletionData.cachedValues(), deletionData.length());
+  }
+
   @Override
   public VmClass getVmClass() {
     return BaseModule.getDynamicClass();

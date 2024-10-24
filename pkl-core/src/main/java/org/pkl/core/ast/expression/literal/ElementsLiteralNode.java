@@ -167,13 +167,13 @@ public abstract class ElementsLiteralNode extends SpecializedObjectLiteralNode {
       @Cached("createMembers(parentLength)")
           UnmodifiableEconomicMap<Object, ObjectMember> properties) {
 
-    // TODO: Assert members does not contain deletions?
+    var deletionData = VmUtils.DeletionData.create(properties, parentLength);
     return new VmListing(
         frame.materialize(),
         parent,
         properties,
-        EconomicMaps.create(),
-        parentLength + elements.length);
+        deletionData.cachedValues(),
+        deletionData.length() + elements.length);
   }
 
   @Specialization(guards = "checkIsValidListingAmendment()")

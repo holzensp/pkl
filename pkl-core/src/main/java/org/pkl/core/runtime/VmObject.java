@@ -74,6 +74,51 @@ public abstract class VmObject extends VmObjectLike {
     return members;
   }
 
+  /**
+   * Members in this {@code VmObject} are subscripted with their {@code referenceKey}. Given that
+   * the definition of this object may contain use of {@code delete}, the keys used in said
+   * definition are different from the {@code referenceKey}. In case of element deletions, the
+   * definition key may be higher {@code long} than the {@code referenceKey}. In case of entry or
+   * property deletions, the key is no longer valid for this object.
+   *
+   * @param referenceKey The key used from outside of this object to dereference a member.
+   * @return {@code null} if the key is deleted on this object, an offset {@code Long} in case of an
+   *     element index with earlier elements being deleted in this object, or the original input.
+   */
+  public @Nullable Object toDefinitionKey(Object referenceKey) {
+    var hasElements =
+        this instanceof VmDynamic dynamic
+            ? dynamic.getLength() > 0
+            : this instanceof VmListing listing && !listing.isEmpty();
+    if (!(referenceKey instanceof Long index) || !hasElements) {
+      var member = getMember(referenceKey);
+      if (member != null && member.isDelete()) {
+        return null;
+      }
+      return referenceKey;
+    }
+
+    var deletedIndices_ = VmUtils.getDeletedIndices(cachedValues);
+    if (deletedIndices_ == null) {
+      return referenceKey;
+    }
+
+    var deletedIndices = new TreeSet<Long>();
+    for (var i : deletedIndices_) {
+      deletedIndices.add(i);
+    }
+
+    var lowerBound = 0L;
+    var add = 0L;
+    do {
+      add = deletedIndices.subSet(lowerBound, index + 1L).size();
+      lowerBound = index + 1L;
+      index += add;
+    } while (add > 0L);
+
+    return index;
+  }
+
   @Override
   public @Nullable Object getCachedValue(Object key) {
     return EconomicMaps.get(cachedValues, key);
