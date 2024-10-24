@@ -76,10 +76,9 @@ public final class VmListing extends VmListingOrMapping<VmListing> {
   public static VmListing create(
       MaterializedFrame enclosingFrame,
       VmObject parent,
-      UnmodifiableEconomicMap<Object, ObjectMember> members) {
-    var deletionData =
-        VmUtils.DeletionData.create(
-            members, parent instanceof VmDynamic dynamic ? dynamic.getLength() : 0);
+      UnmodifiableEconomicMap<Object, ObjectMember> members,
+      int length) {
+    var deletionData = VmUtils.DeletionData.create(members, length);
     return new VmListing(
         enclosingFrame, parent, members, deletionData.cachedValues(), deletionData.length());
   }

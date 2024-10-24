@@ -83,9 +83,7 @@ public abstract class ConstantEntriesLiteralNode extends SpecializedObjectLitera
   @Specialization(guards = "checkIsValidListingAmendment()")
   protected VmListing evalListing(VirtualFrame frame, VmListing parent) {
     checkMaxListingMemberIndex(parent.getLength());
-    var deletionData = VmUtils.DeletionData.create(members, parent.getLength());
-    return new VmListing(
-        frame.materialize(), parent, members, deletionData.cachedValues(), deletionData.length());
+    return VmListing.create(frame.materialize(), parent, members, parent.getLength());
   }
 
   @Specialization
