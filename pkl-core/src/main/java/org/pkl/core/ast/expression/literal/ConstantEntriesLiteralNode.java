@@ -77,8 +77,7 @@ public abstract class ConstantEntriesLiteralNode extends SpecializedObjectLitera
 
   @Specialization
   protected VmDynamic evalDynamic(VirtualFrame frame, VmDynamic parent) {
-    return new VmDynamic(
-        frame.materialize(), parent, members, EconomicMaps.create(), parent.getLength());
+    return VmDynamic.create(frame.materialize(), parent, members, parent.getLength());
   }
 
   @Specialization(guards = "checkIsValidListingAmendment()")

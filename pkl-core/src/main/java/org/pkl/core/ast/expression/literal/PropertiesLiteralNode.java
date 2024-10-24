@@ -85,9 +85,7 @@ public abstract class PropertiesLiteralNode extends SpecializedObjectLiteralNode
 
   @Specialization
   protected Object evalDynamic(VirtualFrame frame, VmDynamic parent) {
-    // TODO: Assert members does not contain deletions?
-    return new VmDynamic(
-        frame.materialize(), parent, members, EconomicMaps.create(), parent.getLength());
+    return VmDynamic.create(frame.materialize(), parent, members, parent.getLength());
   }
 
   @Specialization(guards = "checkIsValidListingAmendment()")
