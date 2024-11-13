@@ -218,7 +218,7 @@ public final class VmUtils {
   @TruffleBoundary
   public static Object doReadMember(
       VmObjectLike receiver, VmObjectLike owner, Object memberKey, ObjectMember member) {
-    return doReadMember(receiver, owner, memberKey, member, true, IndirectCallNode.getUncached());
+    return doReadMember(receiver, owner, memberKey, memberKey, member, true, IndirectCallNode.getUncached());
   }
 
   @TruffleBoundary
@@ -239,19 +239,21 @@ public final class VmUtils {
     assert (!(memberKey instanceof Identifier identifier) || !identifier.isLocalProp())
         : "Must use ReadLocalPropertyNode for local properties.";
 
+    var key = memberKey;
     final var cachedValue = receiver.getCachedValue(memberKey);
     if (cachedValue != null) return cachedValue;
 
     for (var owner = receiver; owner != null; owner = owner.getParent()) {
-      var key = (owner instanceof VmObject obj) ? obj.toDefinitionKey(memberKey) : memberKey;
-      if (key == null) {
-        return null;
+      if (owner instanceof VmObject obj) {
+        key = obj.toDefinitionKey(key);
+        if (key == null) {
+          return null;
+        }
       }
       var member = owner.getMember(key);
       if (member != null) {
-        return doReadMember(receiver, owner, key, member, checkType, callNode);
+        return doReadMember(receiver, owner, key, memberKey, member, checkType, callNode);
       }
-      memberKey = key;
     }
 
     return null;
@@ -262,10 +264,11 @@ public final class VmUtils {
    * cache, but doesn't read from it.)
    */
   @TruffleBoundary
-  public static Object doReadMember(
+  private static Object doReadMember(
       VmObjectLike receiver,
       VmObjectLike owner,
       Object memberKey,
+      Object cacheKey,
       ObjectMember member,
       boolean checkType,
       IndirectCallNode callNode) {
@@ -314,7 +317,7 @@ public final class VmUtils {
         }
         ret = vmListingOrMapping.typecastObjectMember(member, ret, callNode);
       }
-      receiver.setCachedValue(memberKey, ret, member);
+      receiver.setCachedValue(cacheKey, ret, member);
       return ret;
     }
 
@@ -328,7 +331,7 @@ public final class VmUtils {
     if (receiver instanceof VmListingOrMapping<?> vmListingOrMapping) {
       ret = vmListingOrMapping.typecastObjectMember(member, ret, callNode);
     }
-    receiver.setCachedValue(memberKey, ret, member);
+    receiver.setCachedValue(cacheKey, ret, member);
     return ret;
   }
 
